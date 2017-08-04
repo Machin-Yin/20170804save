@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Imgboxer.qml</file>
+        <file>Imgbox.qml</file>
+        <file>Comment.qml</file>
+    </qresource>
+</RCC>

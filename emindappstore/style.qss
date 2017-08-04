@@ -1,0 +1,47 @@
+/*
+QPushButton[width="24"] {
+
+}
+*/
+/*
+QPushButton#minBtn {
+    border-image: url(:/image/return.png);
+}
+QPushButton#maxBtn {
+    border-image: url(:/image/next.png);
+}
+QPushButton#closeBtn {
+    border-image: url(:/image/refresh.png);
+}
+*/
+
+
+
+
+QPushButton#backBtn {
+    border-image: url(:/image/return.png);
+}
+QPushButton#nextBtn {
+    border-image: url(:/image/next.png);
+}
+QPushButton#refreshBtn {
+    border-image: url(:/image/refresh.png);
+}
+
+QLineEdit#searchBox{
+    background-color:transparent;
+}
+
+
+QFrame#searchFrm{
+    background-color: rgb(255, 255, 255);
+    border: 0px solid;
+}
+
+
+
+/*
+QPushButton[width="80"] {
+   background-color:"red";
+}
+*/
