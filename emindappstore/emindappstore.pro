@@ -21,7 +21,6 @@ SOURCES += main.cpp \
     titlebar.cpp \
     ClassAndMorePage/classtop.cpp \
     ClassAndMorePage/classwidget.cpp \
-    ClassAndMorePage/custombutton.cpp \
     ClassAndMorePage/element.cpp \
     ClassAndMorePage/showmore.cpp \
     updatepage/appwidget.cpp \
@@ -47,7 +46,6 @@ HEADERS  += \
     titlebar.h \
     ClassAndMorePage/classtop.h \
     ClassAndMorePage/classwidget.h \
-    ClassAndMorePage/custombutton.h \
     ClassAndMorePage/element.h \
     ClassAndMorePage/showmore.h \
     updatepage/appwidget.h \
@@ -79,10 +77,12 @@ RESOURCES += \
 DISTFILES += \
     style.qss \
     updatepage/image/head.png \
-    README.md
+    updatepage/image/hide.png \
     README.md
 
 
 INCLUDEPATH += /usr/include/packagekitqt5/PackageKit
 
 LIBS += /usr/lib/x86_64-linux-gnu/libpackagekitqt5.so
+
+CONFIG   += c++11

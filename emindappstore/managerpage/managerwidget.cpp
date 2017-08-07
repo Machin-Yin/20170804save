@@ -133,11 +133,31 @@ void ManagerWidget::setInstallSize(QString pacId)
 
 void ManagerWidget::onGetDetails(const PackageKit::Details &value)
 {
-//    emit getDetailOk();
-    qDebug() << "value.size()" << value.size();
-//    QString size = "Size : " +
-//    sizeLabel->setText();
+    double size = (double)value.size();
+    QString insSize = transPackSize(size);
+    QString sizeStr = "Size : " + insSize;
+    sizeLabel->setText(sizeStr);
 }
+
+QString ManagerWidget::transPackSize(const double &size)
+{
+    double packSize = size;
+    static QStringList measures;
+    if (measures.isEmpty())
+        measures << QCoreApplication::translate("QInstaller", "B")
+                 << QCoreApplication::translate("QInstaller", "K")
+                 << QCoreApplication::translate("QInstaller", "M")
+                 << QCoreApplication::translate("QInstaller", "G")
+                 << QCoreApplication::translate("QInstaller", "T");
+    QStringListIterator it(measures);
+    QString measure(it.next());
+    while (packSize >= 1024.0 && it.hasNext()) {
+        measure = it.next();
+        packSize /= 1024.0;
+    }
+    return QString::fromLatin1("%1%2").arg(packSize, 0, 'f', 1).arg(measure);
+}
+
 
 void ManagerWidget::removeFinished(PackageKit::Transaction::Exit status, uint runtime)
 {

@@ -9,7 +9,6 @@ UpdatePage::UpdatePage(QWidget *parent) : QWidget(parent)
 //    upd->checkUpdates();
     upd->getUpdateData();
     createUpdateWindow();
-    transPackSize(9999999999999);
 }
 
 void UpdatePage::createUpdateWindow()
@@ -267,42 +266,25 @@ void UpdatePage::textAreaChanged(int hig)
     }
 }
 
-QString UpdatePage::transPackSize(int psize)
+QString UpdatePage::transPackSize(const double &size)
 {
-    QString packSize;
-    if(psize >= 1024)
-    {
-        double psizek = psize/1024;
-        qDebug()<<"psize*****************"<<psizek;
-        if(psizek >= 1024)
-        {
-            double psizem = psizek/1024;
-            if(psizem >= 1024)
-            {
-
-                double psizeg = psizem/1024;
-                packSize = QString::number(psizeg,10,1) + "G";
-                qDebug()<<"psize*****************2222"<<packSize;
-
-            }
-            else
-            {
-                packSize = QString::number(psizem,10,1) + "M";
-                qDebug()<<"packSize*****************"<<packSize<<" psizeg*************"<<psizem;
-
-            }
-        }
-        else
-        {
-            packSize = QString::number(psizek,10,1) + "K";
-        }
+    double packSize = size;
+    static QStringList measures;
+    if (measures.isEmpty())
+        measures << QCoreApplication::translate("QInstaller", "B")
+                 << QCoreApplication::translate("QInstaller", "K")
+                 << QCoreApplication::translate("QInstaller", "M")
+                 << QCoreApplication::translate("QInstaller", "G")
+                 << QCoreApplication::translate("QInstaller", "T");
+    QStringListIterator it(measures);
+    QString measure(it.next());
+    while (packSize >= 1024.0 && it.hasNext()) {
+        measure = it.next();
+        packSize /= 1024.0;
     }
-    else
-    {
-        packSize = QString::number(psize,10,1) + "B";
-    }
-    return packSize;
+    return QString::fromLatin1("%1%2").arg(packSize, 0, 'f', 1).arg(measure);
 }
+
 
 bool UpdatePage::event(QEvent *event)
 {

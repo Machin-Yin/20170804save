@@ -4,15 +4,18 @@
 #include <QMap>
 
 //分类项结构体
+//分类项结构体
 struct CLASSSTRUCT{
     int category;
     int releaseId;
+    int proStatus;
+    QString packageId;
     QString proImage;
     QString proName;
     double proStar;
     QString proDescription;
-    CLASSSTRUCT(int cate,int releaseid,const QString & image,const QString & name,double star,const QString & desc):
-        category(cate),releaseId(releaseid),proImage(image),proName(name),proStar(star),proDescription(desc){}
+    CLASSSTRUCT(int cate,int releaseid,int prostatus,const QString &packageid,const QString & image,const QString & name,double star,const QString & desc):
+        category(cate),releaseId(releaseid),proStatus(prostatus),packageId(packageid),proImage(image),proName(name),proStar(star),proDescription(desc){}
 };
 
 //更新数据结构体

@@ -25,9 +25,9 @@ public:
     QWidget *widget;
     void setCategory(int cate);//设置分类标志
     void setTopName(const CATEGORYMAP &cateMap);//设置分类项的名字
-    void setElementName(const CLASSSTRUCTMAP &classStructMap);//设置软件的名字
+    void setElement(const CLASSSTRUCTMAP &classStructMap);//设置软件的属性
     void initElement(const ELEMENTNUMBERMAP &classElementNumMap);//初始化软件对象
-    void setElementImage(const CLASSSTRUCTMAP &classStructMap);
+//    void setElementImage(const CLASSSTRUCTMAP &classStructMap);
 
 private:
     //每一个软件项`

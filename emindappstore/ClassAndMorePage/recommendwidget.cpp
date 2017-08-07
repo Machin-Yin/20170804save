@@ -41,14 +41,14 @@ RecommendWidget::RecommendWidget(QWidget *parent) : QWidget(parent)
 }
 
 //设置软件名字
-void RecommendWidget::setElementName(const CLASSSTRUCTMAP &classStruct)
+void RecommendWidget::setElement(const CLASSSTRUCTMAP &classStruct)
 {
     if(classStruct.isEmpty())
     {
         qDebug()<<"the sortstr is empty!"<<endl;
     }
 
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStruct.begin();
+    auto item = classStruct.begin();
 
     for(int i = 0;i < MAXNUMBER && item != classStruct.end();++item,i++)
     {
@@ -56,6 +56,9 @@ void RecommendWidget::setElementName(const CLASSSTRUCTMAP &classStruct)
             element[i].baseWidget->show();
             element[i].setProductId(item.key());
             element[i].initStar(item.value().proStar);
+            element[i].setProStatus(item.value().proStatus);
+            element[i].setBtnImage(item.value().proImage);
+            element[i].setPackageId(item.value().packageId);
     }
 
     for(int hideNum = 30;hideNum < MAXNUMBER;hideNum++)
@@ -70,19 +73,6 @@ void RecommendWidget::setTopName()
         classTop->setLabelData("Recommend");
 }
 
-void RecommendWidget::setElementImage(const CLASSSTRUCTMAP &classStructMap)
-{
-    if(classStructMap.isEmpty())
-    {
-        qDebug()<<"the sortstr is empty!"<<endl;
-    }
-
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStructMap.begin();
-    for(int i = 0;i < MAXNUMBER && item != classStructMap.end(); ++item,i++)
-    {
-        element[i].setBtnImage(item.value().proImage);
-    }
-}
 
 bool RecommendWidget::eventFilter(QObject *watched, QEvent *event)
 {

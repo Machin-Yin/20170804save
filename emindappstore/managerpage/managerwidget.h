@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QCoreApplication>
 #include <QLabel>
 #include <QNetworkAccessManager>
 #include <packagekitqt5/PackageKit/Transaction>
@@ -32,6 +33,7 @@ public:
     void resolveNameToId(QString packName);
     void removePackage(QString pacId);
     void setInstallSize(QString pacId);
+    QString transPackSize(const double &size);
 
 private:
     QHBoxLayout *hbLayout;

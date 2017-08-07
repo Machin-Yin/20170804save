@@ -10,9 +10,8 @@ class RecommendWidget : public QWidget
     Q_OBJECT
 public:
     explicit RecommendWidget(QWidget *parent = 0);
-    void setElementName(const CLASSSTRUCTMAP &classStruct);
+    void setElement(const CLASSSTRUCTMAP &classStruct);
     void setTopName();
-    void setElementImage(const CLASSSTRUCTMAP &classStructMap);
 
 private:
     ClassTop *classTop;

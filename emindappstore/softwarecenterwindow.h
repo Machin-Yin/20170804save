@@ -46,6 +46,7 @@ signals:
 protected slots:
     void onBtnHome();
     void onBtnClass();
+    void onBtnMore();
     void onBtnUpdate();
     void onBtnManager();
     void mousePressEvent(QMouseEvent* event);
@@ -66,7 +67,6 @@ private:
     ClassPage *pageClass;
     UpdatePage *pageUpdate;
     ManagerPage *pageManager;
-    HomeWidget *pageMore;
     SearchWidget *pageSearch;
     DetailWidget *pageDetail;
 

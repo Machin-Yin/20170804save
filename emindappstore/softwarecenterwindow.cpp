@@ -58,6 +58,7 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
     stackWidget->addWidget(pageManager);
     stackWidget->addWidget(pageSearch);
     stackWidget->addWidget(pageDetail);
+    stackWidget->addWidget(pageClass->moreClassWidget);
 
     pageIndex = 0;
 
@@ -73,6 +74,7 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
     connect(titleBar->btnRefresh,SIGNAL(clicked()),this,SLOT(refreshPage()));
 //    connect(this,SIGNAL(pageChanged()),this,SLOT(onPageChanged()));
     connect(stackWidget,SIGNAL(currentChanged(int)),this,SLOT(onPageChanged(int)));
+    connect(pageClass,SIGNAL(setMore()),this,SLOT(onBtnMore()));
 
     connect(stackWidget,SIGNAL(refreshPg(int)),pageHome,SLOT(refreshPage(int)));
     connect(stackWidget,SIGNAL(refreshPg(int)),pageClass,SLOT(refreshPage(int)));
@@ -103,6 +105,12 @@ void SoftwareCenterWindow::onBtnHome()
 void SoftwareCenterWindow::onBtnClass()
 {
     stackWidget->setCurrentWidget(pageClass);
+
+}
+
+void SoftwareCenterWindow::onBtnMore()
+{
+    stackWidget->setCurrentWidget(pageClass->moreClassWidget);
 
 }
 

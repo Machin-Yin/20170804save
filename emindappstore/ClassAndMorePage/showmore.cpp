@@ -37,7 +37,6 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
         }
     }
 
-    starIsOK = 0;
     categoryFlag = -1;
     spaceWidget = new QWidget[5];
     mainLayout->addWidget(moreClassTop->widget);
@@ -45,29 +44,26 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
     moreWidget->setLayout(mainLayout);
 }
 
-//设置软件名字
-void ShowMore::setElementName(int category, const CLASSSTRUCTMAP &classStruct)
+//设置软件属性
+void ShowMore::setElement(int category, const CLASSSTRUCTMAP &classStruct)
 {
      if(classStruct.isEmpty())
     {
         qDebug()<<"the sortstr is empty!"<<endl;
     }
 
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStruct.begin();
-
     int showNum = 0;
-    for(;item != classStruct.end();++item)
+    for(auto item = classStruct.begin();item != classStruct.end();++item)
     {
         if(item.value().category == (category+1))
         {
             moreElement[showNum].setBtnName(item.value().proName);
             moreElement[showNum].baseWidget->show();
             moreElement[showNum].setProductId(item.key());
-            if(starIsOK < classStruct.count())
-            {
-                moreElement[showNum].initStar(item.value().proStar);
-                starIsOK++;
-            }
+            moreElement[showNum].setBtnImage(item.value().proImage);
+            moreElement[showNum].setProStatus(item.value().proStatus);
+            moreElement[showNum].initStar(item.value().proStar);
+            moreElement[showNum].setPackageId(item.value().packageId);
             showNum++;
         }
     }
@@ -89,7 +85,7 @@ void ShowMore::setTopName(int category, const CATEGORYMAP &cateGoryMap)
 
     if(cateGoryMap.contains(category+1))
     {
-        QMap<int,QString>::const_iterator it = cateGoryMap.find(category+1);
+        auto it = cateGoryMap.find(category+1);
         moreClassTop->setLabelData(it.value());
     }
 
@@ -97,27 +93,8 @@ void ShowMore::setTopName(int category, const CATEGORYMAP &cateGoryMap)
 
 void ShowMore::setElementNum(const ELEMENTNUMBERMAP &elementNum)
 {
-    QMap<int,int>::const_iterator it = elementNum.find(categoryFlag+1);
+    auto it = elementNum.find(categoryFlag+1);
     elementNumber = it.value();
-}
-
-void ShowMore::setElementImage(int category, const CLASSSTRUCTMAP &classStructMap)
-{
-    if(classStructMap.isEmpty())
-    {
-        qDebug()<<"the sortstr is empty!"<<endl;
-    }
-
-    int showNum = 0;
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStructMap.begin();
-    for(;item != classStructMap.end(); ++item)
-    {
-        if(item.value().category == (category+1))
-        {
-            moreElement[showNum].setBtnImage(item.value().proImage);
-            showNum++;
-        }
-    }
 }
 
 bool ShowMore::eventFilter(QObject *watched, QEvent *event)

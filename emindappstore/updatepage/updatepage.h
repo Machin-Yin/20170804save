@@ -6,6 +6,7 @@
 #include <QScrollArea>
 #include <QPointer>
 #include <QMutex>
+#include <QCoreApplication>
 #include <packagekitqt5/PackageKit/Daemon>
 #include <packagekitqt5/PackageKit/Transaction>
 #include "taskbar.h"
@@ -20,7 +21,7 @@ public:
     explicit UpdatePage(QWidget *parent = 0);
     void createUpdateWindow();
     void getUpdates();
-    QString transPackSize(int psize);
+    QString transPackSize(const double &size);
 
 private:
     QWidget *pageUpdateWidget;

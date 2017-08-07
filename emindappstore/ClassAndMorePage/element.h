@@ -5,7 +5,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
-#include "custombutton.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QPixmap>
@@ -23,15 +22,12 @@ public:
     QWidget *baseWidget;
     void setBtnImage(QString imagePath);//设置应用图标
     void setBtnName(QString name);//设置应用名字
-    void setBtnStart();//设置应用评分
-    void setBtnStatus(QString status);//设置应用状态
-    void setButton(bool);
+    void setProStatus(int status);//设置应用状态
+    void setPackageId(QString id);
     int category;//应用的分类
     void setcategory(int cate);//设置应用分类
-    int productId;
     void setProductId(int id);
-    void initStar(double num);
-
+    void initStar(double num);//设置应用评分
 
 private slots:
     void btnStatusSlot();
@@ -42,13 +38,16 @@ private:
     QPushButton *btnName;
     QLabel *labelStar;
 
-    CustomButton *btnStatus;//自定义的按钮
+    QPushButton *btnStatus;
     QVBoxLayout *vbLayout;
     QHBoxLayout *hbLayout;
     QHBoxLayout *hbStartLayout;
 
     QNetworkAccessManager *m_ImageManager;
     QPixmap *m_ImagePix;
+    int productId;
+    int proStatus;
+    QString packageId;
 
 protected:
 //    void paintEvent(QPaintEvent *event);

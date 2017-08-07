@@ -23,7 +23,7 @@ Element::Element()
     vbLayout->setSpacing(0);
 
     hbLayout->addWidget(btnImage);
-    btnStatus = new CustomButton();
+    btnStatus = new QPushButton();
     btnStatus->setFixedSize(72,24);
     //        btnStatus->setFlat(true);
 
@@ -38,7 +38,6 @@ Element::Element()
 
     vbLayout->addLayout(hbStartLayout);
     vbLayout->addWidget(btnStatus);
-    setBtnStatus("download");
     connect(btnStatus,SIGNAL(clicked(bool)),this,SLOT(btnStatusSlot()));
 
     //去除矩形虚线框
@@ -46,7 +45,7 @@ Element::Element()
     btnImage->setFocusPolicy(Qt::NoFocus);
     btnStatus->setFocusPolicy(Qt::NoFocus);
     btnStatus->setCursor(Qt::PointingHandCursor);
-    btnStatus->setStyleSheet("border:1px groove;border-radius:2px;border-color:#c8c8c8");
+    btnStatus->setObjectName("btnStatus");
     btnName->setCursor(Qt::PointingHandCursor);
     btnImage->setCursor(Qt::PointingHandCursor);
     hbLayout->addLayout(vbLayout);
@@ -57,6 +56,9 @@ Element::Element()
     m_ImageManager = new QNetworkAccessManager();
     m_ImagePix = new QPixmap();
     m_Flag = 0;
+    productId = 0;
+    proStatus = 0;
+    packageId = "";
     baseWidget->installEventFilter(this);
     connect(m_ImageManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinished(QNetworkReply*)),Qt::QueuedConnection);
 }
@@ -70,11 +72,6 @@ void Element::setBtnImage(QString imagePath)
 {
     m_ImagePath = imagePath;
     m_Flag = 1;
-
-    //    QPixmap pix = QPixmap(imagePath);
-    //    btnImage->setIcon(pix);
-    //    btnImage->setIconSize(pix.size());
-    ////    btnImage->setStyleSheet(imagePath);
 }
 
 void Element::setBtnName(QString name)
@@ -86,27 +83,54 @@ void Element::setBtnName(QString name)
     btnName->setToolTip(name);
 }
 
-void Element::setBtnStart()
+void Element::setProStatus(int status)
 {
+    proStatus = status;
+    QString text;
+    if(status == 1)
+    {
+        text = "DownLoad";
+    }
+    else if(status == 2)
+    {
+        text = "Update";
+    }
+    else if(status == 3)
+    {
+        text = "Open";
+    }
+    else
+    {
+        qDebug("product status is error");
+        text = "DownLoad";
+    }
 
+    btnStatus->setText(text);
 }
 
-void Element::setBtnStatus(QString status)
+void Element::setPackageId(QString id)
 {
-    btnStatus->setText(status);
-    btnStatus->setToolTip(status);
-}
-
-void Element::setButton(bool)
-{
-
+    packageId = id;
 }
 
 void Element::btnStatusSlot()
 {
-    btnStatus->setText("NULL");
-    btnStatus->setEnabled(false);
-    btnStatus->setToolTip(btnStatus->text());
+    if(proStatus == 1)
+    {
+        btnStatus->setText("NULL");
+    }
+    else if(proStatus == 2)
+    {
+        btnStatus->setText("NULL");
+    }
+    else if(proStatus == 3)
+    {
+        btnStatus->setText("NULL");
+    }
+    else
+    {
+        qDebug("product status is error!");
+    }
 }
 
 void Element::setcategory(int cate)

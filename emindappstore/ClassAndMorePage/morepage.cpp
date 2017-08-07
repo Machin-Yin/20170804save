@@ -30,7 +30,6 @@ void MorePage::createMorewindow()
     vbClasslayoutMore->setMargin(0);
     pageMoreWidget->setLayout(vbClasslayoutMore);
     //滚动条不可见，只能通过鼠标滑动
-//    scrollMore->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollMore->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollMore->setWidgetResizable(true);
 }

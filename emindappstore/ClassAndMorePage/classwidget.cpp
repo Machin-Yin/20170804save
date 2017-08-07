@@ -161,21 +161,21 @@ void ClassWidget::setTopName(const CATEGORYMAP &cateMap)
 
     if(cateMap.contains(category+1))
     {
-        QMap<int,QString>::const_iterator it = cateMap.find(category+1);
+        const auto it = cateMap.find(category+1);
         classtop->setLabelData(it.value());
         //        qDebug()<<"the it.value is : "<<it.value()<<endl;
     }
 }
 
-//设置软件项名字
-void ClassWidget::setElementName(const CLASSSTRUCTMAP &classStructMap)
+//设置软件项属性
+void ClassWidget::setElement(const CLASSSTRUCTMAP &classStructMap)
 {
     if(classStructMap.isEmpty())
     {
         qDebug()<<"the sortstr is empty!"<<endl;
     }
 
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStructMap.begin();
+    auto item = classStructMap.begin();
     for(int i = 0;item != classStructMap.end() && i<18 ; ++item)
     {
         if(item.value().category == (category+1))
@@ -183,6 +183,9 @@ void ClassWidget::setElementName(const CLASSSTRUCTMAP &classStructMap)
             tt[i].setBtnName(item.value().proName);
             tt[i].setProductId(item.key());
             tt[i].initStar(item.value().proStar);
+            tt[i].setBtnImage(item.value().proImage);
+            tt[i].setProStatus(item.value().proStatus);
+            tt[i].setPackageId(item.value().packageId);
             i++;
         }
     }
@@ -192,32 +195,12 @@ void ClassWidget::setElementName(const CLASSSTRUCTMAP &classStructMap)
 void ClassWidget::initElement(const ELEMENTNUMBERMAP &classElementNumMap)
 {
 //    qDebug()<<__FUNCTION__<<endl;
-    QMap<int,int>::const_iterator it;
-
-    it = classElementNumMap.find(category+1);
+    auto it = classElementNumMap.find(category+1);
     tt = new Element[it.value()];
 
     for(int i=0 ; i<it.value() && i<18 ; i++)
     {
         demoElement.append(tt[i].baseWidget);
-    }
-}
-
-void ClassWidget::setElementImage(const CLASSSTRUCTMAP &classStructMap)
-{
-    if(classStructMap.isEmpty())
-    {
-        qDebug()<<"the sortstr is empty!"<<endl;
-    }
-
-    QMap<int,CLASSSTRUCT>::const_iterator item = classStructMap.begin();
-    for(int i = 0;item != classStructMap.end() && i<18 ; ++item)
-    {
-        if(item.value().category == (category+1))
-        {
-            tt[i].setBtnImage(item.value().proImage);
-            i++;
-        }
     }
 }
 

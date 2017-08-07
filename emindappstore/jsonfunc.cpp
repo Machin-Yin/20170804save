@@ -391,7 +391,7 @@ void JSONFUNC::getProducts(QJsonObject obj)
                     }
 
                     if(lnProductId != 0 && cateid != 0)
-                        jsonData->classStrMap.insert(lnProductId,CLASSSTRUCT(cateid,relid,icourl,proname,gracount,prodesc));
+                        jsonData->classStrMap.insert(lnProductId,CLASSSTRUCT(cateid,relid,1,NULL,icourl,proname,gracount,prodesc));
                 }
             }
         }
