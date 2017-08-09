@@ -1,14 +1,15 @@
 #include <QDebug>
 #include "pkupdates.h"
 
-PkUpdates::PkUpdates(QObject *parent) :
+PkUpdates::PkUpdates(QObject *parent, JSONFUNC *jsonfunc) :
     QObject(parent),
     m_updatesTrans(Q_NULLPTR),
     m_cacheTrans(Q_NULLPTR),
     m_packagesTrans(Q_NULLPTR)
 {    
-    shareData = new ShareData();
-    jsonFunc = new JSONFUNC(shareData);
+//    shareData = new ShareData();
+//    jsonFunc = new JSONFUNC(shareData);
+    jsonFunc = jsonfunc;
 //    sigFlag = 1;
 //    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::updatesChanged, this, &PkUpdates::onUpdatesChanged,Qt::QueuedConnection);
     //    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::networkStateChanged, this, &PkUpdates::networkStateChanged);
@@ -31,22 +32,6 @@ void PkUpdates::getMagData()
 {
     getPackages();
 }
-
-
-//void PkUpdates::onUpdatesChanged()
-//{
-////    qDebug() << __FUNCTION__ << ": Updates changed, getting updates!";
-//    if(sigFlag != 2)
-//    {
-//        getUpdates();
-//        getPackages();
-//    }
-//    sigFlag++;
-//    if(sigFlag > 10)
-//    {
-//        sigFlag = 3;
-//    }
-//}
 
 
 void PkUpdates::getUpdates()
@@ -78,7 +63,7 @@ void PkUpdates::getPackages()
 void PkUpdates::onPackage(PackageKit::Transaction::Info info, const QString &packageID, const QString &summary)
 {
     QString packageName = PackageKit::Transaction::packageName(packageID);
-//    qDebug() << __FUNCTION__ << ": Got update package:" << packageID;
+    qDebug() << __FUNCTION__ << ": Got update package:" << packageID;
 
     switch (info) {
     case PackageKit::Transaction::InfoBlocked:
@@ -95,8 +80,8 @@ void PkUpdates::onGetPackages(PackageKit::Transaction::Info info, const QString 
     switch (info) {
     case PackageKit::Transaction::InfoInstalled:
     {
-//        QString packageName = PackageKit::Transaction::packageName(packageID);
-//        qDebug() << __FUNCTION__ << ": Got packages:" << packageID;
+        //        QString packageName = PackageKit::Transaction::packageName(packageID);
+        //        qDebug() << __FUNCTION__ << ": Got packages:" << packageID;
         m_packagesList.insert(packageID, summary);
     }
         break;
@@ -108,6 +93,7 @@ void PkUpdates::onGetPackages(PackageKit::Transaction::Info info, const QString 
 
 void PkUpdates::onUpdateFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
+    Q_UNUSED(runtime);
     if (status == PackageKit::Transaction::ExitSuccess)
     {
         emit updateOk();
@@ -115,6 +101,7 @@ void PkUpdates::onUpdateFinished(PackageKit::Transaction::Exit status, uint runt
     }
     else
     {
+        emit updateFailure();
         qDebug() << "Update package didn't finish successfully";
     }
 
@@ -123,6 +110,7 @@ void PkUpdates::onUpdateFinished(PackageKit::Transaction::Exit status, uint runt
 
 void PkUpdates::onFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
+    Q_UNUSED(runtime);
 //    qDebug() << __FUNCTION__ ;
     PackageKit::Transaction * trans = qobject_cast<PackageKit::Transaction *>(sender());
     if (!trans)
@@ -147,12 +135,10 @@ void PkUpdates::onFinished(PackageKit::Transaction::Exit status, uint runtime)
         if (status == PackageKit::Transaction::ExitSuccess)
         {
 
-            connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(getUpRelease()));
-            jsonFunc->setAppname();
+            getUpRelease();
+//            connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(getUpRelease()));
+//            jsonFunc->setAppname();
 
-//            emit getUpdFinished(m_upNameList);
-//            qDebug() << "Check updates transaction finished successfully";
-//            qDebug() << "Total number of updates: " << count() << endl;
         }
         else
         {
@@ -163,8 +149,9 @@ void PkUpdates::onFinished(PackageKit::Transaction::Exit status, uint runtime)
     {
         if (status == PackageKit::Transaction::ExitSuccess)
         {
-            connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(getInstalled()));
-            jsonFunc->setAppname();
+//            connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(getInstalled()));
+//            jsonFunc->setAppname();
+            getInstalled();
 
             qDebug() << "Get Packages Installed transaction finished successfully";
             qDebug() << "Total number of Packages Installed: " << insCount() << endl;
@@ -183,11 +170,11 @@ void PkUpdates::getUpRelease()
     int releaseAry[m_upNameList.count()];
     int num = 0;
     qDebug()<< "m_upNameList.count() :" << m_upNameList.count();
-    qDebug()<< "shareData->classStrMap.count() :" << shareData->classStrMap.count();
+    qDebug()<< "jsonFunc->jsonData->classStrMap.count() :" << jsonFunc->jsonData->classStrMap.count();
     QMap<int,CLASSSTRUCT>::iterator item;
     for(int i = 0; i < m_upNameList.count(); i++)
     {
-        for(item = shareData->classStrMap.begin(); item != shareData->classStrMap.end(); item++)
+        for(item = jsonFunc->jsonData->classStrMap.begin(); item != jsonFunc->jsonData->classStrMap.end(); item++)
         {
 //            qDebug()<< "m_upNameList.at(" << i << ") :" << m_upNameList.at(i);
 //            qDebug()<< "item.value().proName :" << item.value().proName << endl;
@@ -205,6 +192,8 @@ void PkUpdates::getUpRelease()
 
     if(num != 0)
     {
+
+        qDebug() << "num == " << num;
         jsonFunc->getUpdateRelease(releaseAry,num);
         connect(jsonFunc,SIGNAL(updateIsOk()),this,SLOT(sendUpdateData()));
     }
@@ -220,7 +209,7 @@ void PkUpdates::getInstalled()
 
     for(iter = m_packagesList.begin(); iter != m_packagesList.end(); iter++)
     {
-        for(item1 = shareData->classStrMap.begin(); item1 != shareData->classStrMap.end(); item1++)
+        for(item1 = jsonFunc->jsonData->classStrMap.begin(); item1 != jsonFunc->jsonData->classStrMap.end(); item1++)
         {
             QString packName = PackageKit::Daemon::packageName(iter.key());
 
@@ -238,7 +227,7 @@ void PkUpdates::getInstalled()
 
 void PkUpdates::sendUpdateData()
 {
-    emit sigUpdateData(shareData->updateStrMap);
+    emit sigUpdateData(jsonFunc->jsonData->updateStrMap);
 }
 
 void PkUpdates::installUpdate(const QString &packageId)
@@ -253,6 +242,44 @@ void PkUpdates::installUpdate(const QString &packageId)
     connect(m_installTrans.data(), &PackageKit::Transaction::finished, this, &PkUpdates::onUpdateFinished);
 
 }
+
+void PkUpdates::installPackage(QString packageName)
+{
+    PackageKit::Transaction *resolveTransaction = PackageKit::Daemon::resolve(packageName,
+//                                                   PackageKit::Transaction::FilterNone);
+                                                   PackageKit::Transaction::FilterArch);
+    connect(resolveTransaction,
+            SIGNAL(package(PackageKit::Transaction::Info,QString,QString)),
+            this,
+            SLOT(packageInstall(PackageKit::Transaction::Info,QString,QString)));
+
+}
+
+void PkUpdates::packageInstall(PackageKit::Transaction::Info, QString packageID, QString summary)
+{
+    qDebug() << "packageInstall()" << packageID << endl;
+    qDebug() << "packageInstall()" << summary << endl;
+    PackageKit::Transaction *installTransaction = PackageKit::Daemon::installPackage(packageID);
+    connect(installTransaction,
+            SIGNAL(finished(PackageKit::Transaction::Exit, uint)),
+            this,
+            SLOT(packageInstallFinished(PackageKit::Transaction::Exit, uint)));
+}
+
+void PkUpdates::packageInstallFinished(PackageKit::Transaction::Exit status, uint runtime)
+{
+  qDebug() << "packageFinished() status: " << status << endl;
+  qDebug() << "packageFinished() on of seconds: " << runtime << endl;
+  if (status == PackageKit::Transaction::Exit::ExitSuccess)
+  {
+    qDebug() << "Package Install Success!";
+  }
+  else
+  {
+    qDebug() << "Package Install Failure!";
+  }
+}
+
 
 //void PkUpdates::installUpdates(const QStringList &packageIds, bool simulate, bool untrusted)
 //{
@@ -282,10 +309,10 @@ void PkUpdates::installUpdate(const QString &packageId)
 
 void PkUpdates::onPackageUpdating(PackageKit::Transaction::Info info, const QString &packageID)
 {
+    Q_UNUSED(info);
     const uint percent = m_installTrans->percentage();
     qDebug() << "Package updating:" << packageID << "percent == " << percent;
 }
-
 
 int PkUpdates::count() const
 {

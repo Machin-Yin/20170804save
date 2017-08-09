@@ -122,8 +122,6 @@ void ManagerWidget::removePackage(QString pacId)
 
 void ManagerWidget::setInstallSize(QString pacId)
 {
-    qDebug() << "Requesting update details for" << pacId;
-
     detailTransaction = PackageKit::Daemon::getDetails(pacId);
     connect(detailTransaction,
             SIGNAL(details(const PackageKit::Details &)),

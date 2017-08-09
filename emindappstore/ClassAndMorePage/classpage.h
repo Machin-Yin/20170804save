@@ -10,7 +10,7 @@ class ClassPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit ClassPage(QWidget *parent = 0);
+    explicit ClassPage(QWidget *parent,JSONFUNC *jsonFunc,ShareData *sharedata);
     ShareData *shareData;
     JSONFUNC *jsonFunc;//数据读取
     MorePage *moreClassWidget;

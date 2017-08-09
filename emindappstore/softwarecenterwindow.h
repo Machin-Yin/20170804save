@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QApplication>
 #include <QDebug>
+#include "jsonfunc.h"
+#include "sharedata.h"
 
 class TitleBar;
 class QStackedWidget;
@@ -74,7 +76,8 @@ private:
     QList<int> pageList;
     QScrollArea *scrollArea;
     qint32 pageIndex;
-
+    JSONFUNC *jsonFunc;
+    ShareData *shareData;
 };
 
 #endif // SoftwareCenterWindowH

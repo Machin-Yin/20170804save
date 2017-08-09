@@ -1,10 +1,11 @@
 #include <QHeaderView>
 #include "managerpage.h"
 
-ManagerPage::ManagerPage(QWidget *parent) : QWidget(parent)
+ManagerPage::ManagerPage(QWidget *parent, JSONFUNC *json) : QWidget(parent)
 {
-    updm = new PkUpdates(this);
-    updm->getMagData();
+    updm = new PkUpdates(this,json);
+//    updm->getMagData();
+    connect(json,SIGNAL(productIsOk()),this,SLOT(getPackageInstalled()));
     connect(updm,SIGNAL(getInsFinished(QVariantMap)),this,SLOT(onGetInsFinished(QVariantMap)));
     CreateManagerWindow();
 }
@@ -21,6 +22,8 @@ void ManagerPage::CreateManagerWindow()
     QString stronekey =  "全部开始";
     QWidget *wid = new QWidget();
     manTaskBar = new TaskBar(this,strtask,stronekey);
+    connect(manTaskBar->getOnekeyBtn(),SIGNAL(clicked()),this,SLOT(allStartBtnclicked()));
+
 //    manTaskBar->size().setHeight(64);
 
     installTable = new QTableWidget();
@@ -97,9 +100,9 @@ void ManagerPage::CreateManagerWindow()
     vboxLayout2->setContentsMargins(16,0,16,0);
 
     vboxLayout->addLayout(vboxLayout1);
-    vboxLayout1->addSpacing(6);
+    vboxLayout1->addSpacing(18);
     vboxLayout1->addWidget(manTaskBar);
-    vboxLayout1->addSpacing(6);
+    vboxLayout1->addSpacing(18);
     vboxLayout1->addWidget(installTable);
     vboxLayout->addWidget(splitLabel);
     vboxLayout->addLayout(vboxLayout2);
@@ -120,6 +123,17 @@ void ManagerPage::onAppUpdate(QString iconUrl, QString appName, QString appVersi
 {
     qDebug() << __FUNCTION__;
 
+    for(int i = 0; i < installTable->rowCount(); i++)
+    {
+        ManagerWidget *managerWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
+        QString insdName = managerWidget->getButton(NAMEBUTTON)->text();
+        if(appName == insdName)
+        {
+            managerWidget->setManagerButton(tr("Updating..."));
+            return;
+        }
+    }
+
     ManagerWidget *manTaskManager = new ManagerWidget(this,iconUrl,appName,appVersion,appSize);
     manTaskManager->setManagerButton(tr("Updating..."));
     manTaskManager->getButton(UNINSBUTTON)->hide();
@@ -127,7 +141,7 @@ void ManagerPage::onAppUpdate(QString iconUrl, QString appName, QString appVersi
     installTable->setCellWidget(0,0,manTaskManager);
     int rowCount = installTable->rowCount();
     installTable->setMinimumHeight(96*rowCount);
-
+    connect(manTaskManager->getButton(MANAGERBUTTON),SIGNAL(clicked()),this,SLOT(insManBtnClicked()));
 }
 
 void ManagerPage::onAppUpdateOk(QString appName)
@@ -145,9 +159,23 @@ void ManagerPage::onAppUpdateOk(QString appName)
     }
 }
 
+void ManagerPage::onAppUpdateFailure(QString appName)
+{
+    int rowCount = installTable->rowCount();
+    for(int i = 0; i < rowCount; i++)
+    {
+        ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
+        QString upAppName = insWidget->getButton(NAMEBUTTON)->text();
+        if(appName == upAppName)
+        {
+            insWidget->getButton(MANAGERBUTTON)->setText(tr("Update Failed"));
+        }
+    }
+}
+
 void ManagerPage::updToInsd(QString appName, QString iconUrl, QString appVer)
 {
-    ManagerWidget *manCompManager = new ManagerWidget(this,iconUrl,appName,appVer,"Size : 88.8M");
+    ManagerWidget *manCompManager = new ManagerWidget(this,iconUrl,appName,appVer,"");
     compTable->insertRow(0);
     compTable->setCellWidget(0,0,manCompManager);
     int rowCount = compTable->rowCount();
@@ -165,10 +193,38 @@ void ManagerPage::deleteRmvRow(QString pacId)
     }
 }
 
+void ManagerPage::getPackageInstalled()
+{
+    updm->getMagData();
+}
+
+void ManagerPage::insManBtnClicked()
+{
+    int rowCount = installTable->rowCount();
+    for(int i = 0; i < rowCount; i++)
+    {
+        ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
+        if(sender() == insWidget->getButton(MANAGERBUTTON))
+        {
+            emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->text());
+        }
+    }
+}
+
+void ManagerPage::allStartBtnclicked()
+{
+    int insdCount = installTable->rowCount();
+    for(int i = 0; i < insdCount; i++)
+    {
+        ManagerWidget* insWidget = (ManagerWidget*)installTable->cellWidget(i,0);
+
+        emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->text());
+
+    }
+}
+
 void ManagerPage::onGetInsFinished(QVariantMap insdMap)
 {
-    qDebug() << __FUNCTION__;
-
     int insRowCount = insdMap.count();
 
     compTable->setRowCount(insRowCount);
@@ -185,7 +241,7 @@ void ManagerPage::onGetInsFinished(QVariantMap insdMap)
         QString headUrl = item.value().toString();
 
         //        QString appVersion = item.value().
-        ManagerWidget *manTaskManager = new ManagerWidget(this,headUrl,appName,appVersion,"Size : 66.6M");
+        ManagerWidget *manTaskManager = new ManagerWidget(this,headUrl,appName,appVersion,"");
         manTaskManager->setPkgId(packageId);
         manTaskManager->getButton(MANAGERBUTTON)->setText(tr("Open"));
         compTable->setCellWidget(count,0,manTaskManager);

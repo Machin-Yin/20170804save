@@ -18,7 +18,7 @@ class UpdatePage : public QWidget
 {
     Q_OBJECT
 public:
-    explicit UpdatePage(QWidget *parent = 0);
+    explicit UpdatePage(QWidget *parent,JSONFUNC *json);
     void createUpdateWindow();
     void getUpdates();
     QString transPackSize(const double &size);
@@ -32,13 +32,14 @@ private:
     bool event(QEvent *event);
     PkUpdates * upd;
 //    QMutex mutex;
+//    int test;
 
-
-    int test;
 signals:
     void done();
     void theUpdateApp(QString, QString, QString, QString);
     void appUpdateOk(QString, QString, QString);
+    void appUpdateFailure(QString);
+
 public slots:
     void pageUpdateBtnClicked();
     void strLenChanged();
@@ -46,6 +47,9 @@ public slots:
     void onGetupFinished(UPDATESTRUCTMAP updateMap);
     void oneKeyBtnclicked();
     void onAppUpdateFinished();
+    void onAppUpdateFailure();
+    void getPackageUpdate();
+    void onInsdBtnClicked(QString appName);
 
 };
 

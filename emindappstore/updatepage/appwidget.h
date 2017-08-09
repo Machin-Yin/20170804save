@@ -31,10 +31,12 @@ public:
 signals:
     void sigIntroResize();
     void appUpdateFinished();
+    void appUpdateFailure();
 
-private slots:
+public slots:
     void getImageFinished(QNetworkReply *reply);
     void onUpdateOk();
+    void onUpdateFailure();
 private:
     QHBoxLayout *appLayout;
     QVBoxLayout *rightLayout;

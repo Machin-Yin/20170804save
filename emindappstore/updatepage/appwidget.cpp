@@ -103,6 +103,12 @@ void AppWidget::onUpdateOk()
     emit appUpdateFinished();
 }
 
+void AppWidget::onUpdateFailure()
+{
+    qDebug() << __FUNCTION__;
+    emit appUpdateFailure();
+}
+
 bool AppWidget::event(QEvent *event)
 {
     if(event->type() == QEvent::Resize )

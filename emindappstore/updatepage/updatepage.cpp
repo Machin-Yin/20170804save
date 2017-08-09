@@ -3,12 +3,14 @@
 #include <QLoggingCategory>
 #include "updatepage.h"
 
-UpdatePage::UpdatePage(QWidget *parent) : QWidget(parent)
+UpdatePage::UpdatePage(QWidget *parent, JSONFUNC *json) : QWidget(parent)
 {
-    upd = new PkUpdates(this);
+    upd = new PkUpdates(this,json);
+    connect(json,SIGNAL(productIsOk()),this,SLOT(getPackageUpdate()));
 //    upd->checkUpdates();
-    upd->getUpdateData();
+//    upd->getUpdateData();
     createUpdateWindow();
+//    connect(json,SIGNAL(categoryIsOk(int));
 }
 
 void UpdatePage::createUpdateWindow()
@@ -45,11 +47,14 @@ void UpdatePage::createUpdateWindow()
 
 void UpdatePage::onGetupFinished(UPDATESTRUCTMAP updateMap)
 {
-//    qDebug() << endl << __FUNCTION__ ;
+    qDebug() << endl << __FUNCTION__ ;
     int rowCount = updateMap.count();
     updTaskBar->setTaskLabel(rowCount);
     updateTable->setColumnCount(1);
     updateTable->setRowCount(rowCount);
+
+    qDebug() << "rowCount" << rowCount ;
+
 
     //    updateTable->resizeColumnToContents(0);
     updateTable->setStyleSheet(
@@ -160,7 +165,9 @@ void UpdatePage::pageUpdateBtnClicked()
             QString pkgId = appWidget->getPkgId();
             appWidget->getUpdateButton()->setText("Updating...");
             connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+            connect(upd,SIGNAL(updateFailure()),appWidget,SLOT(onUpdateFailure()));
             connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+            connect(appWidget,SIGNAL(appUpdateFailure()),this,SLOT(onAppUpdateFailure()));
             upd->installUpdate(pkgId);
             break;
         }
@@ -197,8 +204,8 @@ void UpdatePage::oneKeyBtnclicked()
 
         QString pkgId = appWidget->getPkgId();
         appWidget->getUpdateButton()->setText("Updating...");
-        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+//        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+//        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
         upd->installUpdate(pkgId);
 
         if(!appWidget->getFuncButton()->isEnabled())
@@ -223,6 +230,59 @@ void UpdatePage::onAppUpdateFinished()
             updateTable->setMinimumHeight(96*count);
             updTaskBar->setTaskLabel(count);
         }
+    }
+}
+
+void UpdatePage::onAppUpdateFailure()
+{
+    qDebug() << __FUNCTION__;
+    for(int i = 0; i < updateTable->rowCount(); i++)
+    {
+        AppWidget* appWidget = (AppWidget*)updateTable->cellWidget(i,0);
+        if(sender() == appWidget)
+        {
+            emit appUpdateFailure(appWidget->getAppName());
+            appWidget->getUpdateButton()->setText(tr("Update Failed"));
+        }
+    }
+}
+
+void UpdatePage::getPackageUpdate()
+{
+    upd->getUpdateData();
+}
+
+void UpdatePage::onInsdBtnClicked(QString appName)
+{
+    int updCount = updateTable->rowCount();
+    for(int i = 0; i < updCount; i++)
+    {
+        AppWidget* appWidget = (AppWidget*)updateTable->cellWidget(i,0);
+        if(appName == appWidget->getAppName())
+        {
+            QString iconUrl = appWidget->getHeadUrl();
+            QString appName = appWidget->getAppName();
+            QString appVersion = tr("Version：") + appWidget->getAppVer();
+            QString appSize = tr("Size：") + appWidget->getAppSize();
+            emit theUpdateApp(iconUrl, appName, appVersion, appSize);
+            appWidget->getUpdateButton()->setText("Updating...");
+            QString pkgId = appWidget->getPkgId();
+//            connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+//            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+            upd->installUpdate(pkgId);
+
+        }
+
+
+
+        QString pkgId = appWidget->getPkgId();
+        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+        upd->installUpdate(pkgId);
+
+        if(!appWidget->getFuncButton()->isEnabled())
+            i++;
+
     }
 }
 

@@ -20,6 +20,7 @@ void JSONFUNC::getCategoryNum()
 
 void JSONFUNC::getUpdateRelease(int *array,int size)
 {
+    qDebug() << __FUNCTION__;
     QByteArray dataArr;
     //    dataArr.append("[");
     //    for(int i = 0;i<2;i++)
@@ -530,6 +531,7 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
                         jsonData->updateStrMap.insert(proid,UPDATESTRUCT(proid,ver,icourl,name,chaglog,downurl,packsize));
                 }
             }
+            qDebug() << "updateStrMap == " << jsonData->updateStrMap.count();
             emit updateIsOk();
         }
     }

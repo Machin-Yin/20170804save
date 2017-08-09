@@ -43,12 +43,12 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
     scrollArea->setWidgetResizable(true);
     scrollArea->ensureWidgetVisible(stackWidget);
 
-
-
+    shareData = new ShareData();
+    jsonFunc = new JSONFUNC(shareData);
     pageHome = new HomeWidget(this);
-    pageClass = new ClassPage(this);
-    pageUpdate = new UpdatePage(this);
-    pageManager = new ManagerPage(this);
+    pageClass = new ClassPage(this,jsonFunc,shareData);
+    pageUpdate = new UpdatePage(this,jsonFunc);
+    pageManager = new ManagerPage(this,jsonFunc);
     pageSearch = new SearchWidget(this);
     pageDetail = new DetailWidget(this);
 
@@ -61,7 +61,6 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
     stackWidget->addWidget(pageClass->moreClassWidget);
 
     pageIndex = 0;
-
 
     connect(titleBar->btnHome,SIGNAL(clicked()),this,SLOT(onBtnHome()));
     connect(titleBar->btnClass,SIGNAL(clicked()),this,SLOT(onBtnClass()));
@@ -85,17 +84,20 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
 
     connect(pageUpdate,SIGNAL(theUpdateApp(QString, QString, QString, QString)),pageManager,SLOT(onAppUpdate(QString, QString, QString, QString)));
     connect(pageUpdate,SIGNAL(appUpdateOk(QString, QString, QString)),pageManager,SLOT(onAppUpdateOk(QString)));
+    connect(pageUpdate,SIGNAL(appUpdateFailure(QString)),pageManager,SLOT(onAppUpdateFailure(QString)));
     connect(pageUpdate,SIGNAL(appUpdateOk(QString, QString, QString)),pageManager,SLOT(updToInsd(QString, QString, QString)));
-//    onBtnHome();
+    connect(pageManager,SIGNAL(insdBtnClicked(QString)),pageUpdate,SLOT(onInsdBtnClicked(QString)));
+
+
+    //    onBtnHome();
 
 }
 
 
 SoftwareCenterWindow::~SoftwareCenterWindow()
 {
+
 }
-
-
 
 void SoftwareCenterWindow::onBtnHome()
 {

@@ -1,10 +1,12 @@
 #include "classpage.h"
 
-ClassPage::ClassPage(QWidget *parent) : QWidget(parent)
+ClassPage::ClassPage(QWidget *parent, JSONFUNC *jsonfunc,ShareData *sharedata) : QWidget(parent)
 {
     scrollClass = new QScrollArea(this);
-    shareData = new ShareData();
-    jsonFunc = new JSONFUNC(shareData);
+//    shareData = new ShareData();
+//    jsonFunc = new JSONFUNC(shareData);
+    shareData = sharedata;
+    jsonFunc = jsonfunc;
     jsonFunc->getCategoryNum();
     moreClassWidget = new MorePage();
     scrollClass->resize(QSize(960,640));
@@ -73,9 +75,6 @@ void ClassPage::setClassElementName()
         classWidget[i].setElement(shareData->classStrMap);
 //        classWidget[i].setElementImage(shareData->classStrMap);
     }
-
-    int a[5] = {1,2,33,44,55};
-    jsonFunc->getUpdateRelease(a,5);
 }
 
 //测试更多页面跳转

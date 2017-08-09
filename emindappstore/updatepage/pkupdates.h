@@ -15,7 +15,7 @@ class PkUpdates : public QObject
 {
     Q_OBJECT
 public:
-    explicit PkUpdates(QObject *parent = nullptr);
+    explicit PkUpdates(QObject *parent ,JSONFUNC *jsonfunc);
     int count() const;
     int insCount() const;
     QStringList getPacName() const;
@@ -23,6 +23,7 @@ public:
     void installUpdate(const QString &packageId);
     void getUpdateData();
     void getMagData();
+    void installPackage(QString packageName);
 
     ShareData *shareData;
     JSONFUNC *jsonFunc;
@@ -33,9 +34,12 @@ signals:
     void upReleaseAry(int *,int);
     void sigUpdateData(UPDATESTRUCTMAP);
     void updateOk();
+    void updateFailure();
 
 public slots:
     Q_INVOKABLE void checkUpdates(bool force = true);
+    void packageInstall(PackageKit::Transaction::Info, QString packageID, QString summary);
+    void packageInstallFinished(PackageKit::Transaction::Exit status, uint runtime);
 
 private slots:
     void onFinished(PackageKit::Transaction::Exit status, uint runtime);
