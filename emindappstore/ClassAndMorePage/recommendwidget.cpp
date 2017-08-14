@@ -3,7 +3,7 @@
 #define RecommendWidgetROW 6
 #define RecommendWidgetCOLUMN 5
 
-RecommendWidget::RecommendWidget(QWidget *parent) : QWidget(parent)
+RecommendWidget::RecommendWidget(QWidget *parent, ShareData *data) : QWidget(parent)
 {
     classTop = new ClassTop();
     classTop->setTopbtnHide();
@@ -12,7 +12,7 @@ RecommendWidget::RecommendWidget(QWidget *parent) : QWidget(parent)
     eleLayout = new QGridLayout();
     spaceWidget = new QWidget[5];
     spacer =new QSpacerItem(24,24,QSizePolicy::Minimum,QSizePolicy::Expanding);
-
+    shareData = data;
     int maxEleNumber = 0;
     for(int i = 0;i<RecommendWidgetROW;i++)
     {
@@ -40,25 +40,33 @@ RecommendWidget::RecommendWidget(QWidget *parent) : QWidget(parent)
     setTopName();
 }
 
-//设置软件名字
-void RecommendWidget::setElement(const CLASSSTRUCTMAP &classStruct)
+//设置软件属性
+void RecommendWidget::setElement(const CLASSSTRUCTMAP &classStruct,const RECOMMENDMAP &recommend)
 {
     if(classStruct.isEmpty())
     {
         qDebug()<<"the sortstr is empty!"<<endl;
     }
 
-    auto item = classStruct.begin();
+    auto item = recommend.begin();
+    QMap<int,CLASSSTRUCT>::const_iterator  item2;
 
-    for(int i = 0;i < MAXNUMBER && item != classStruct.end();++item,i++)
+    for(int i = 0;i < MAXNUMBER && item != recommend.end();++item)
     {
-            element[i].setBtnName(item.value().proName);
-            element[i].baseWidget->show();
-            element[i].setProductId(item.key());
-            element[i].initStar(item.value().proStar);
-            element[i].setProStatus(item.value().proStatus);
-            element[i].setBtnImage(item.value().proImage);
-            element[i].setPackageId(item.value().packageId);
+        item2 = classStruct.find(item.key());
+        if(item2.key() == item.key())
+        {
+            element[i].setBtnName(item2.value().proName);
+            element[i].setProductId(item2.key());
+            element[i].initStar(item2.value().proStar);
+            element[i].setProStatus(item2.value().proStatus);
+            element[i].setBtnImage(item2.value().proImage);
+            element[i].setReleaseId(item2.value().releaseId);
+            element[i].setExeFile(item2.value().exeFile);
+            connect(&element[i],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
+            connect(&element[i],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
+            i++;
+        }
     }
 
     for(int hideNum = 30;hideNum < MAXNUMBER;hideNum++)
@@ -132,3 +140,23 @@ bool RecommendWidget::eventFilter(QObject *watched, QEvent *event)
     return QWidget::eventFilter(watched,event);
 }
 
+void RecommendWidget::sendInstallApp(QString name, int id)
+{
+    emit installApp(name,id);
+}
+
+void RecommendWidget::sendUpdateApp(QString name, int id)
+{
+    emit updateApp(name,id);
+}
+
+void RecommendWidget::updatePackageStatus(QString name, bool bo,int flag)
+{
+    for(int i=0;i<MAXNUMBER;i++)
+    {
+        if(name == element[i].getBtnName())
+        {
+            element[i].updateProStatus(bo,flag);
+        }
+    }
+}

@@ -9,7 +9,7 @@ ClassTop::ClassTop()
     btnTop->setFlat(true);
     labelTop = new QLabel();
     spacerTop = new QSpacerItem(0,48,QSizePolicy::Expanding,QSizePolicy::Minimum);
-    labelTop->setStyleSheet("border-left-width: 3px;border-style: solid;border-left-color: rgb(65,105,225);");
+//    labelTop->setStyleSheet("border-left-width: 3px;border-style: solid;border-left-color: rgb(65,105,225);");
     labelTop->setMaximumHeight(16);
     labelTop->setContentsMargins(8,0,0,0);
 
@@ -51,7 +51,7 @@ ClassTop::~ClassTop()
 
 void ClassTop::setBtnData()
 {
-    btnTop->setText("更多  >");
+    btnTop->setText("更多>");
 }
 
 void ClassTop::setLabelData(QString data)

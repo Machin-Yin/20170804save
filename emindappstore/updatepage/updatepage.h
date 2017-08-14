@@ -31,6 +31,7 @@ private:
     QScrollArea *upScroArea;
     bool event(QEvent *event);
     PkUpdates * upd;
+    JSONFUNC *jsonFunc;
 //    QMutex mutex;
 //    int test;
 
@@ -39,6 +40,7 @@ signals:
     void theUpdateApp(QString, QString, QString, QString);
     void appUpdateOk(QString, QString, QString);
     void appUpdateFailure(QString);
+    void updateStatusChanged();
 
 public slots:
     void pageUpdateBtnClicked();
@@ -50,6 +52,7 @@ public slots:
     void onAppUpdateFailure();
     void getPackageUpdate();
     void onInsdBtnClicked(QString appName);
+    void onStatusChanged();
 
 };
 

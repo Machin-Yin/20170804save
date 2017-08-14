@@ -6,11 +6,10 @@
 UpdatePage::UpdatePage(QWidget *parent, JSONFUNC *json) : QWidget(parent)
 {
     upd = new PkUpdates(this,json);
+    jsonFunc = json;
     connect(json,SIGNAL(productIsOk()),this,SLOT(getPackageUpdate()));
-//    upd->checkUpdates();
-//    upd->getUpdateData();
+    connect(upd,SIGNAL(updateStatusChanged()),this,SLOT(onStatusChanged()));
     createUpdateWindow();
-//    connect(json,SIGNAL(categoryIsOk(int));
 }
 
 void UpdatePage::createUpdateWindow()
@@ -267,18 +266,16 @@ void UpdatePage::onInsdBtnClicked(QString appName)
             emit theUpdateApp(iconUrl, appName, appVersion, appSize);
             appWidget->getUpdateButton()->setText("Updating...");
             QString pkgId = appWidget->getPkgId();
-//            connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-//            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+            connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
             upd->installUpdate(pkgId);
 
         }
 
-
-
-        QString pkgId = appWidget->getPkgId();
-        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
-        upd->installUpdate(pkgId);
+//        QString pkgId = appWidget->getPkgId();
+//        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+//        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+//        upd->installUpdate(pkgId);
 
         if(!appWidget->getFuncButton()->isEnabled())
             i++;
@@ -345,6 +342,10 @@ QString UpdatePage::transPackSize(const double &size)
     return QString::fromLatin1("%1%2").arg(packSize, 0, 'f', 1).arg(measure);
 }
 
+void UpdatePage::onStatusChanged()
+{
+    emit updateStatusChanged();
+}
 
 bool UpdatePage::event(QEvent *event)
 {

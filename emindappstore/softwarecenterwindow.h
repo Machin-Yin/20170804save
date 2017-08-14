@@ -20,6 +20,8 @@ class QScrollArea;
 class ClassPage;
 class UpdatePage;
 class ManagerPage;
+class ShareData;
+class JSONFUNC;
 
 
 class SoftwareCenterWindow : public QWidget
@@ -76,8 +78,9 @@ private:
     QList<int> pageList;
     QScrollArea *scrollArea;
     qint32 pageIndex;
-    JSONFUNC *jsonFunc;
+
     ShareData *shareData;
+    JSONFUNC *jsonFunc;
 };
 
 #endif // SoftwareCenterWindowH

@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QPaintEvent>
 #include <QLabel>
+#include <QProcess>
 
 class Element:public QWidget
 {
@@ -23,11 +24,14 @@ public:
     void setBtnImage(QString imagePath);//设置应用图标
     void setBtnName(QString name);//设置应用名字
     void setProStatus(int status);//设置应用状态
-    void setPackageId(QString id);
+    void updateProStatus(bool status,int flag);
+    void setReleaseId(int id);
     int category;//应用的分类
     void setcategory(int cate);//设置应用分类
     void setProductId(int id);
     void initStar(double num);//设置应用评分
+    void setExeFile(QString exe);
+    QString getBtnName();
 
 private slots:
     void btnStatusSlot();
@@ -47,13 +51,20 @@ private:
     QPixmap *m_ImagePix;
     int productId;
     int proStatus;
-    QString packageId;
+    int releaseId;
+//    QString elementName;
+    QProcess process;
+    QString exebleFile;
 
 protected:
 //    void paintEvent(QPaintEvent *event);
     bool eventFilter(QObject *target, QEvent *event);
     int m_Flag;
     QString m_ImagePath;
+
+signals:
+    void installPackage(QString,int);
+    void updatePackage(QString,int);
 };
 
 #endif // ELEMENTH

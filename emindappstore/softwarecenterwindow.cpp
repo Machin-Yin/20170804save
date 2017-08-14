@@ -45,10 +45,12 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
 
     shareData = new ShareData();
     jsonFunc = new JSONFUNC(shareData);
+
     pageHome = new HomeWidget(this);
     pageClass = new ClassPage(this,jsonFunc,shareData);
     pageUpdate = new UpdatePage(this,jsonFunc);
     pageManager = new ManagerPage(this,jsonFunc);
+
     pageSearch = new SearchWidget(this);
     pageDetail = new DetailWidget(this);
 
@@ -88,11 +90,20 @@ SoftwareCenterWindow::SoftwareCenterWindow(QWidget *parent)
     connect(pageUpdate,SIGNAL(appUpdateOk(QString, QString, QString)),pageManager,SLOT(updToInsd(QString, QString, QString)));
     connect(pageManager,SIGNAL(insdBtnClicked(QString)),pageUpdate,SLOT(onInsdBtnClicked(QString)));
 
+    connect(pageClass,SIGNAL(installpackage(QString,int)),pageManager,SLOT(getInstallRlease(QString, int)),Qt::QueuedConnection);
+    connect(pageManager,SIGNAL(sigInstallSuccess(QString,bool,int)),pageClass,SLOT(updatePackageStatus(QString,bool,int)),Qt::QueuedConnection);
+    connect(pageManager,SIGNAL(sigInstallSuccess(QString,bool,int)),pageClass->moreClassWidget->showMore,SLOT(updatePackageStatus(QString,bool,int)));
+    connect(pageClass->moreClassWidget,SIGNAL(installpackage(QString,int)),pageManager,SLOT(getInstallRlease(QString,int)),Qt::QueuedConnection);
+    connect(pageManager,SIGNAL(removePackageSuccess(QString,bool,int)),pageClass,SLOT(updatePackageStatus(QString,bool,int)));
+    connect(pageManager,SIGNAL(removePackageSuccess(QString,bool,int)),pageClass->moreClassWidget->showMore,SLOT(updatePackageStatus(QString,bool,int)));
 
+    connect(pageClass,SIGNAL(updatePackage(QString,int)),pageUpdate,SLOT(onInsdBtnClicked(QString)),Qt::QueuedConnection);
+
+    connect(pageManager,SIGNAL(installStatusChanged()),pageClass,SLOT(resetStatus()));
+    connect(pageUpdate,SIGNAL(updateStatusChanged()),pageClass,SLOT(resetStatus()));
     //    onBtnHome();
 
 }
-
 
 SoftwareCenterWindow::~SoftwareCenterWindow()
 {
@@ -126,7 +137,6 @@ void SoftwareCenterWindow::onBtnManager()
     stackWidget->setCurrentWidget(pageManager);
 
 }
-
 
 void SoftwareCenterWindow::mousePressEvent(QMouseEvent* event)
 {

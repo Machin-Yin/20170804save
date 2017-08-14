@@ -11,6 +11,15 @@
 
 //#define MAXUPNUM 100
 
+enum{
+    DOWNLOAD = 1,
+    UPDATE,
+    OPEN,
+    REDOWNLOAD,
+    REUPDATE
+};
+
+
 class PkUpdates : public QObject
 {
     Q_OBJECT
@@ -24,6 +33,7 @@ public:
     void getUpdateData();
     void getMagData();
     void installPackage(QString packageName);
+    QString transPackSize(const double &size);
 
     ShareData *shareData;
     JSONFUNC *jsonFunc;
@@ -35,11 +45,17 @@ signals:
     void sigUpdateData(UPDATESTRUCTMAP);
     void updateOk();
     void updateFailure();
+    void installSuccess();
+    void installFailure();
+    void updateStatusChanged();
+    void installStatusChanged();
 
 public slots:
     Q_INVOKABLE void checkUpdates(bool force = true);
     void packageInstall(PackageKit::Transaction::Info, QString packageID, QString summary);
     void packageInstallFinished(PackageKit::Transaction::Exit status, uint runtime);
+    void resolveFinished(PackageKit::Transaction::Exit status, uint runtime);
+
 
 private slots:
     void onFinished(PackageKit::Transaction::Exit status, uint runtime);

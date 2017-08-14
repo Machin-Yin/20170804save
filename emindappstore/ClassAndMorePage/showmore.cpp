@@ -25,7 +25,8 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
         {
             eleLayout->addWidget(moreElement[maxEleNumber].baseWidget,i,j,1,1,Qt::AlignLeft);
             moreElement[maxEleNumber].baseWidget->hide();
-
+            connect(&moreElement[maxEleNumber],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
+            connect(&moreElement[maxEleNumber],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
             if(maxEleNumber < (MAXNUMBER-1))
             {
                 maxEleNumber++;
@@ -42,6 +43,11 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
     mainLayout->addWidget(moreClassTop->widget);
     mainLayout->addLayout(eleLayout);
     moreWidget->setLayout(mainLayout);
+}
+
+ShowMore::~ShowMore()
+{
+    delete moreElement;
 }
 
 //设置软件属性
@@ -63,7 +69,8 @@ void ShowMore::setElement(int category, const CLASSSTRUCTMAP &classStruct)
             moreElement[showNum].setBtnImage(item.value().proImage);
             moreElement[showNum].setProStatus(item.value().proStatus);
             moreElement[showNum].initStar(item.value().proStar);
-            moreElement[showNum].setPackageId(item.value().packageId);
+            moreElement[showNum].setReleaseId(item.value().releaseId);
+            moreElement[showNum].setExeFile(item.value().exeFile);
             showNum++;
         }
     }
@@ -181,4 +188,25 @@ bool ShowMore::eventFilter(QObject *watched, QEvent *event)
         }
     }
     return QWidget::eventFilter(watched,event);
+}
+
+void ShowMore::sendInstallApp(QString name, int id)
+{
+    emit installApp(name,id);
+}
+
+void ShowMore::sendUpdateApp(QString name, int id)
+{
+    emit updateApp(name,id);
+}
+
+void ShowMore::updatePackageStatus(QString name, bool bo,int flag)
+{
+    for(int i=0;i<elementNumber;i++)
+    {
+        if(name == moreElement[i].getBtnName())
+        {
+            moreElement[i].updateProStatus(bo,flag);
+        }
+    }
 }

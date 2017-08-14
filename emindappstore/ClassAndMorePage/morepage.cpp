@@ -5,6 +5,8 @@ MorePage::MorePage(QWidget *parent) : QWidget(parent)
         scrollMore = new QScrollArea(this);
         scrollMore->setMaximumWidth(1200);
         showMore = new ShowMore();
+        connect(showMore,SIGNAL(installApp(QString,int)),this,SLOT(sendInstallPackage(QString,int)));
+        connect(showMore,SIGNAL(updateApp(QString,int)),this,SLOT(sendUpdatePackage(QString,int)));
 }
 
 bool MorePage::event(QEvent *event)
@@ -31,5 +33,16 @@ void MorePage::createMorewindow()
     pageMoreWidget->setLayout(vbClasslayoutMore);
     //滚动条不可见，只能通过鼠标滑动
     scrollMore->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollMore->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     scrollMore->setWidgetResizable(true);
+}
+
+void MorePage::sendInstallPackage(QString name, int id)
+{
+    emit installpackage(name,id);
+}
+
+void MorePage::sendUpdatePackage(QString name, int id)
+{
+    emit updatePackage(name,id);
 }

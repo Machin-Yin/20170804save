@@ -12,6 +12,7 @@ class ShowMore : public QWidget
 
 public:
     explicit ShowMore(QWidget *parent = 0);
+    ~ShowMore();
     QWidget *moreWidget;
     void setElement(int category,const CLASSSTRUCTMAP &classStruct);
     void setTopName(int category,const CATEGORYMAP &cateGoryMap);
@@ -27,6 +28,15 @@ private:
     bool eventFilter(QObject *watched, QEvent *event);
     int categoryFlag;
     int elementNumber;
+
+signals:
+    void installApp(QString,int);
+    void updateApp(QString,int);
+
+protected slots:
+    void sendInstallApp(QString name,int id);
+    void sendUpdateApp(QString name,int id);
+    void updatePackageStatus(QString name, bool bo, int flag);
 };
 
 #endif // SHOWMOREH

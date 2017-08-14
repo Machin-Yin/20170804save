@@ -28,6 +28,10 @@ public:
     void setElement(const CLASSSTRUCTMAP &classStructMap);//设置软件的属性
     void initElement(const ELEMENTNUMBERMAP &classElementNumMap);//初始化软件对象
 //    void setElementImage(const CLASSSTRUCTMAP &classStructMap);
+    int getCategory();
+    int getElementNum();
+    Element *getTt(int num);
+    void resetStatus(const CLASSSTRUCTMAP &classStructMap);
 
 private:
     //每一个软件项`
@@ -47,6 +51,7 @@ private:
     //空白widget
     QWidget *spaceWidget;
     int spaceWidgetNum;
+    int elementNum;
 
 protected:
     //重写的窗口变化事件
@@ -54,9 +59,13 @@ protected:
 
 signals:
     void moreShow(int);
+    void installApp(QString,int);
+    void updateApp(QString,int);
 
 protected slots:
     void sendMoreShow(int i);
+    void sendInstallApp(QString name,int id);
+    void sendUpdateApp(QString name,int id);
 };
 
 #endif // CLASSWIDGETH

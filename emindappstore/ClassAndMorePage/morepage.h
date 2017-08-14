@@ -19,7 +19,14 @@ private:
     QWidget *pageMoreWidget;
     bool event(QEvent *event);
 
+
+signals:
+    void installpackage(QString,int);
+    void updatePackage(QString,int);
+
 protected slots:
+    void sendInstallPackage(QString name ,int id);
+    void sendUpdatePackage(QString name ,int id);
     void createMorewindow();
 };
 

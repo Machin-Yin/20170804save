@@ -30,9 +30,11 @@ public:
     void getImage(QString headUrl);
     QString getPkgId();
     void setPkgId(QString packId);
+    QString getAppName();
+    QString getHeadUrl();
+    QString getVersion();
     void resolveNameToId(QString packName);
     void removePackage(QString pacId);
-    void setInstallSize(QString pacId);
     QString transPackSize(const double &size);
 
 private:
@@ -46,17 +48,26 @@ private:
     QPushButton *managerButton;
     QNetworkAccessManager *imageManager;
     QString pkgId;
+    QString appName;
+    QString headUrl;
+    QString appVersion;
     PackageKit::Transaction *detailTransaction;
 
 signals:
     void pacRmvSuccess(QString);
     void getDetailOk();
+    void appInstallSuccess(QString);
+    void appInstallFailure(QString);
+    void resetPackageIdSuccess(QString);
 
 public slots:
     void replyFinished(QNetworkReply *reply);
     void resetPackId(PackageKit::Transaction::Info, QString packageID, QString summar);
     void removeFinished(PackageKit::Transaction::Exit status, uint runtime);
     void onGetDetails(const PackageKit::Details &value);
+    void onInstallSuccess();
+    void onInstallFailure();
+    void setInstallSize(QString pacId);
 
 };
 

@@ -4,13 +4,13 @@
 #include <QWidget>
 #include "classwidget.h"
 #include "classtop.h"
-
+#include "sharedata.h"
 class RecommendWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RecommendWidget(QWidget *parent = 0);
-    void setElement(const CLASSSTRUCTMAP &classStruct);
+    explicit RecommendWidget(QWidget *parent,ShareData *data);
+    void setElement(const CLASSSTRUCTMAP &classStruct,const RECOMMENDMAP &recommend);
     void setTopName();
 
 private:
@@ -25,9 +25,16 @@ private:
     bool eventFilter(QObject *watched, QEvent *event);
     int categoryFlag;
 
-signals:
+    ShareData *shareData;
 
-public slots:
+signals:
+    void installApp(QString,int);
+    void updateApp(QString,int);
+
+protected slots:
+    void sendInstallApp(QString name,int id);
+    void sendUpdateApp(QString name,int id);
+    void updatePackageStatus(QString name, bool bo, int flag);
 };
 
 #endif // RECOMMENDWIDGET_H

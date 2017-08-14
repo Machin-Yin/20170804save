@@ -5,7 +5,7 @@
 
 
 
-ManagerWidget::ManagerWidget(QWidget *parent, QString urlstr, QString namestr, QString verstr, QString sizestr) : QWidget(parent)
+ManagerWidget::ManagerWidget(QWidget *parent, QString urlstr, QString namestr, QString verstr, QString sizestr) : QWidget(parent),appName(namestr),headUrl(urlstr),appVersion(verstr)
 
 {    
     hbLayout = new QHBoxLayout();
@@ -72,11 +72,6 @@ QPushButton * ManagerWidget::getButton(int num)
     }
 }
 
-QLabel *ManagerWidget::getLabel()
-{
-    return sizeLabel;
-}
-
 void ManagerWidget::setManagerButton(QString manastr)
 {
     managerButton->setText(manastr);
@@ -89,16 +84,6 @@ void ManagerWidget::getImage(QString headUrl)
     request.setUrl(QUrl(headUrl));
     connect(imageManager, SIGNAL(finished(QNetworkReply *)), this, SLOT(replyFinished(QNetworkReply *)));
     imageManager->get(request);
-}
-
-QString ManagerWidget::getPkgId()
-{
-    return pkgId;
-}
-
-void ManagerWidget::setPkgId(QString packId)
-{
-    pkgId = packId;
 }
 
 void ManagerWidget::resolveNameToId(QString packName)
@@ -137,6 +122,16 @@ void ManagerWidget::onGetDetails(const PackageKit::Details &value)
     sizeLabel->setText(sizeStr);
 }
 
+void ManagerWidget::onInstallSuccess()
+{
+    emit appInstallSuccess(appName);
+}
+
+void ManagerWidget::onInstallFailure()
+{
+    emit appInstallFailure(appName);
+}
+
 QString ManagerWidget::transPackSize(const double &size)
 {
     double packSize = size;
@@ -156,7 +151,6 @@ QString ManagerWidget::transPackSize(const double &size)
     return QString::fromLatin1("%1%2").arg(packSize, 0, 'f', 1).arg(measure);
 }
 
-
 void ManagerWidget::removeFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
   qDebug() << "packageFinished() status: " << status << endl;
@@ -172,11 +166,11 @@ void ManagerWidget::removeFinished(PackageKit::Transaction::Exit status, uint ru
   }
 }
 
-
 void ManagerWidget::resetPackId(PackageKit::Transaction::Info, QString packageID, QString summar)
 {
     qDebug() << "The new package is: " << packageID << summar;
     pkgId = packageID;
+    emit resetPackageIdSuccess(packageID);
 }
 
 void ManagerWidget::replyFinished(QNetworkReply *reply)
@@ -190,5 +184,35 @@ void ManagerWidget::replyFinished(QNetworkReply *reply)
         headButton->setIconSize(QSize(64,64));
 
     }
+}
+
+QLabel *ManagerWidget::getLabel()
+{
+    return sizeLabel;
+}
+
+QString ManagerWidget::getPkgId()
+{
+    return pkgId;
+}
+
+void ManagerWidget::setPkgId(QString packId)
+{
+    pkgId = packId;
+}
+
+QString ManagerWidget::getAppName()
+{
+    return appName;
+}
+
+QString ManagerWidget::getHeadUrl()
+{
+    return headUrl;
+}
+
+QString ManagerWidget::getVersion()
+{
+    return appVersion;
 }
 

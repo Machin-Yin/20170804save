@@ -9,13 +9,13 @@ struct CLASSSTRUCT{
     int category;
     int releaseId;
     int proStatus;
-    QString packageId;
     QString proImage;
     QString proName;
     double proStar;
     QString proDescription;
-    CLASSSTRUCT(int cate,int releaseid,int prostatus,const QString &packageid,const QString & image,const QString & name,double star,const QString & desc):
-        category(cate),releaseId(releaseid),proStatus(prostatus),packageId(packageid),proImage(image),proName(name),proStar(star),proDescription(desc){}
+    QString exeFile;
+    CLASSSTRUCT(int cate,int releaseid,int prostatus,const QString & image,const QString & name,double star,const QString & desc,const QString &exe):
+        category(cate),releaseId(releaseid),proStatus(prostatus),proImage(image),proName(name),proStar(star),proDescription(desc),exeFile(exe){}
 };
 
 //更新数据结构体
@@ -27,9 +27,10 @@ struct UPDATESTRUCT{
     QString proName;
     QString changeLog;
     QString downloadUrl;
-    int packageSize;
-    UPDATESTRUCT(int id,QString ver,const QString &image,const QString &name,const QString & changelog,const QString & downloadurl,int packagesize):
-        productId(id),version(ver),proImage(image),proName(name),changeLog(changelog),downloadUrl(downloadurl),packageSize(packagesize){}
+    double packageSize;
+    QString exeFile;
+    UPDATESTRUCT(int id,QString ver,const QString &image,const QString &name,const QString & changelog,const QString & downloadurl,double packagesize,const QString & exe):
+        productId(id),version(ver),proImage(image),proName(name),changeLog(changelog),downloadUrl(downloadurl),packageSize(packagesize),exeFile(exe){}
 };
 
 //产品截图结构体
@@ -50,6 +51,11 @@ struct COMMENT{
     QString CommentDate;
     COMMENT(int commentid,int releaseid,int userid,const QString & commenttext,int commentgrade,const QString & commentdate):
         commentId(commentid),releaseId(releaseid),userId(userid),commentText(commenttext),commentGrade(commentgrade),CommentDate(commentdate){}
+};
+
+struct RECOMMEND
+{
+
 };
 
 //int 代表分类项编号，QString代表分类名

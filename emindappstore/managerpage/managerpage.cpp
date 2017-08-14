@@ -4,14 +4,19 @@
 ManagerPage::ManagerPage(QWidget *parent, JSONFUNC *json) : QWidget(parent)
 {
     updm = new PkUpdates(this,json);
+    jsonFunc = json;
 //    updm->getMagData();
-    connect(json,SIGNAL(productIsOk()),this,SLOT(getPackageInstalled()));
+    connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(getPackageInstalled()));
     connect(updm,SIGNAL(getInsFinished(QVariantMap)),this,SLOT(onGetInsFinished(QVariantMap)));
-    CreateManagerWindow();
+    connect(jsonFunc,SIGNAL(updateIsOk()),this,SLOT(onAppInstall()));
+    connect(this,SIGNAL(appInstallOk(QString, QString, QString)),this,SLOT(updToInsd(QString, QString, QString)));
+    connect(updm,SIGNAL(installStatusChanged()),this,SLOT(onStatusChanged()));
+
+    createManagerWindow();
 }
 
 
-void ManagerPage::CreateManagerWindow()
+void ManagerPage::createManagerWindow()
 {
     manScroArea = new QScrollArea(this);
     manScroArea->resize(this->width(),this->height());
@@ -165,22 +170,64 @@ void ManagerPage::onAppUpdateFailure(QString appName)
     for(int i = 0; i < rowCount; i++)
     {
         ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
-        QString upAppName = insWidget->getButton(NAMEBUTTON)->text();
+        QString upAppName = insWidget->getAppName();
         if(appName == upAppName)
         {
-            insWidget->getButton(MANAGERBUTTON)->setText(tr("Update Failed"));
+            insWidget->getButton(MANAGERBUTTON)->setText(tr("reupdate"));
+        }
+    }
+}
+
+void ManagerPage::onAppInstallSuccess(QString appName)
+{
+    int rowCount = installTable->rowCount();
+    for(int i = 0; i < rowCount; i++)
+    {
+        ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
+        QString insAppName = insWidget->getAppName();
+        if(appName == insAppName)
+        {
+            QString headUrl = insWidget->getHeadUrl();
+            QString appVersion = insWidget->getVersion();
+            emit appInstallOk(appName,headUrl,appVersion);
+            emit sigInstallSuccess(appName,true,1);
+            installTable->removeRow(i);
+            installTable->setMinimumHeight(96*(rowCount - 1));
+//            insWidget->getButton(MANAGERBUTTON)->setText(tr("Install Success..."));
+
+        }
+    }
+}
+
+void ManagerPage::onAppInstallFailure(QString appName)
+{
+    int rowCount = installTable->rowCount();
+    for(int i = 0; i < rowCount; i++)
+    {
+        ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
+        QString insAppName = insWidget->getAppName();
+        if(appName == insAppName)
+        {
+            emit sigInstallSuccess(appName,false,1);
+            insWidget->getButton(MANAGERBUTTON)->setText(tr("reinstall"));
         }
     }
 }
 
 void ManagerPage::updToInsd(QString appName, QString iconUrl, QString appVer)
 {
+    qDebug() << __FUNCTION__;
     ManagerWidget *manCompManager = new ManagerWidget(this,iconUrl,appName,appVer,"");
     compTable->insertRow(0);
     compTable->setCellWidget(0,0,manCompManager);
     int rowCount = compTable->rowCount();
     compTable->setMinimumHeight(96*rowCount);
     manCompManager->resolveNameToId(appName);
+    connect(manCompManager,SIGNAL(resetPackageIdSuccess(QString)),manCompManager,SLOT(setInstallSize(QString)));
+    connect(manCompManager->getButton(HEADBUTTON),SIGNAL(clicked()),this,SLOT(compBtnClicked()));
+    connect(manCompManager->getButton(NAMEBUTTON),SIGNAL(clicked()),this,SLOT(compBtnClicked()));
+    connect(manCompManager->getButton(UNINSBUTTON),SIGNAL(clicked()),this,SLOT(compBtnClicked()));
+    connect(manCompManager->getButton(MANAGERBUTTON),SIGNAL(clicked()),this,SLOT(compBtnClicked()));
 }
 
 void ManagerPage::deleteRmvRow(QString pacId)
@@ -189,7 +236,11 @@ void ManagerPage::deleteRmvRow(QString pacId)
     {
         ManagerWidget* managerWidget = (ManagerWidget*)compTable->cellWidget(i,0);
         if(pacId == managerWidget->getPkgId())
+        {
+            QString pacName = managerWidget->getAppName();
+            emit removePackageSuccess(pacName,true,3);
             compTable->removeRow(i);
+        }
     }
 }
 
@@ -206,7 +257,7 @@ void ManagerPage::insManBtnClicked()
         ManagerWidget *insWidget = (ManagerWidget *)installTable->cellWidget(i, 0);
         if(sender() == insWidget->getButton(MANAGERBUTTON))
         {
-            emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->text());
+            emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->toolTip());
         }
     }
 }
@@ -218,9 +269,49 @@ void ManagerPage::allStartBtnclicked()
     {
         ManagerWidget* insWidget = (ManagerWidget*)installTable->cellWidget(i,0);
 
-        emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->text());
-
+        emit insdBtnClicked(insWidget->getButton(NAMEBUTTON)->toolTip());
     }
+}
+
+void ManagerPage::getInstallRlease(QString appName, int releaseId)
+{
+    qDebug() << __FUNCTION__;
+    Q_UNUSED(appName);
+    int releaseAry[1];
+    releaseAry[0] = releaseId;
+
+    jsonFunc->jsonData->updateStrMap.clear();
+    jsonFunc->getUpdateRelease(releaseAry,1);
+}
+
+void ManagerPage::onAppInstall()
+{
+    if(jsonFunc->jsonData->updateStrMap.isEmpty())
+    {
+        return;
+    }
+    QString headUrl = jsonFunc->jsonData->updateStrMap.begin().value().proImage;
+    QString appName = jsonFunc->jsonData->updateStrMap.begin().value().proName;
+    QString appVersion = tr("Version :") + jsonFunc->jsonData->updateStrMap.begin().value().proName;
+    double appSize = jsonFunc->jsonData->updateStrMap.begin().value().packageSize;
+    QString pacSize = updm->transPackSize(appSize);
+    QString appSizeStr = tr("Size :") + pacSize;
+
+    ManagerWidget *manTaskManager = new ManagerWidget(this,headUrl, appName, appVersion, appSizeStr);
+    manTaskManager->setManagerButton(tr("Installing..."));
+    manTaskManager->getButton(UNINSBUTTON)->hide();
+    installTable->insertRow(0);
+    installTable->setCellWidget(0,0,manTaskManager);
+    int rowCount = installTable->rowCount();
+    installTable->setMinimumHeight(96*rowCount);
+
+    connect(updm,SIGNAL(installSuccess()),manTaskManager,SLOT(onInstallSuccess()));
+    connect(updm,SIGNAL(installFailure()),manTaskManager,SLOT(onInstallFailure()));
+    connect(manTaskManager,SIGNAL(appInstallSuccess(QString)),this,SLOT(onAppInstallSuccess(QString)));
+    connect(manTaskManager,SIGNAL(appInstallFailure(QString)),this,SLOT(onAppInstallFailure(QString)));
+
+    updm->installPackage(appName);
+//    connect(manTaskManager->getButton(MANAGERBUTTON),SIGNAL(clicked()),this,SLOT(insManBtnClicked()));
 }
 
 void ManagerPage::onGetInsFinished(QVariantMap insdMap)
@@ -291,6 +382,11 @@ void ManagerPage::compBtnClicked()
         }
 
     }
+}
+
+void ManagerPage::onStatusChanged()
+{
+    emit installStatusChanged();
 }
 
 bool ManagerPage::event(QEvent *event)

@@ -122,7 +122,7 @@ bool ClassWidget::eventFilter(QObject *target, QEvent *event)
             //为不够一行的软件类添加空控件，使布局好看
             for(int i = 0;i<(column - demoElement.size());i++)
             {
-//                qDebug()<<(column - demoElement.size())<<endl;
+                //                qDebug()<<(column - demoElement.size())<<endl;
                 gridLayout->addWidget(&spaceWidget[i],0,demoElement.size()+i,1,1,Qt::AlignLeft);
             }
 
@@ -149,6 +149,16 @@ void ClassWidget::sendMoreShow(int i)
 {
     emit moreShow(i);
     //    qDebug()<<" More  Show  !!!!!!!"<<endl;
+}
+
+void ClassWidget::sendInstallApp(QString name, int id)
+{
+    emit installApp(name,id);
+}
+
+void ClassWidget::sendUpdateApp(QString name, int id)
+{
+    emit updateApp(name,id);
 }
 
 //设置分类项名字
@@ -185,7 +195,8 @@ void ClassWidget::setElement(const CLASSSTRUCTMAP &classStructMap)
             tt[i].initStar(item.value().proStar);
             tt[i].setBtnImage(item.value().proImage);
             tt[i].setProStatus(item.value().proStatus);
-            tt[i].setPackageId(item.value().packageId);
+            tt[i].setReleaseId(item.value().releaseId);
+            tt[i].setExeFile(item.value().exeFile);
             i++;
         }
     }
@@ -194,13 +205,43 @@ void ClassWidget::setElement(const CLASSSTRUCTMAP &classStructMap)
 //初始化软件项
 void ClassWidget::initElement(const ELEMENTNUMBERMAP &classElementNumMap)
 {
-//    qDebug()<<__FUNCTION__<<endl;
+    //    qDebug()<<__FUNCTION__<<endl;
     auto it = classElementNumMap.find(category+1);
     tt = new Element[it.value()];
-
+    elementNum = it.value();
     for(int i=0 ; i<it.value() && i<18 ; i++)
     {
         demoElement.append(tt[i].baseWidget);
+        connect(&tt[i],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
+        connect(&tt[i],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
+    }
+}
+
+int ClassWidget::getCategory()
+{
+    return category+1;
+}
+
+int ClassWidget::getElementNum()
+{
+    return elementNum;
+}
+
+Element *ClassWidget::getTt(int num)
+{
+    return &tt[num];
+}
+
+void ClassWidget::resetStatus(const CLASSSTRUCTMAP &classStructMap)
+{
+    auto item = classStructMap.begin();
+    for(int i = 0;item != classStructMap.end() && i<18 ; ++item)
+    {
+        if(item.value().category == (category+1))
+        {
+            tt[i].setProStatus(item.value().proStatus);
+            i++;
+        }
     }
 }
 

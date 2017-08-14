@@ -58,7 +58,6 @@ Element::Element()
     m_Flag = 0;
     productId = 0;
     proStatus = 0;
-    packageId = "";
     baseWidget->installEventFilter(this);
     connect(m_ImageManager,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinished(QNetworkReply*)),Qt::QueuedConnection);
 }
@@ -85,8 +84,8 @@ void Element::setBtnName(QString name)
 
 void Element::setProStatus(int status)
 {
-    proStatus = status;
     QString text;
+    proStatus = status;
     if(status == 1)
     {
         text = "DownLoad";
@@ -97,35 +96,102 @@ void Element::setProStatus(int status)
     }
     else if(status == 3)
     {
-        text = "Open";
+        text = "open";
+    }
+    else if(status == 4)
+    {
+        text = "reDownLoad";
+    }
+    else if(status == 5)
+    {
+        text = "reUpdate";
     }
     else
     {
         qDebug("product status is error");
         text = "DownLoad";
     }
-
     btnStatus->setText(text);
 }
-
-void Element::setPackageId(QString id)
+void Element::updateProStatus(bool status, int flag)
 {
-    packageId = id;
+    QString text;
+    if(flag == 1 || flag == 2)
+    {
+        if(status)
+        {
+            if(proStatus == 1)
+            {
+                text = "Open";
+                proStatus = 3;
+            }
+            else if(proStatus == 2)
+            {
+                text = "Open";
+                proStatus = 3;
+            }
+            else if(proStatus == 4)
+            {
+                text = "Open";
+                proStatus = 3;
+            }
+            else if(proStatus == 5)
+            {
+                text = "Open";
+                proStatus = 3;
+            }
+            else
+            {
+                text = "DownLoad";
+            }
+        }
+        else
+        {
+            if(proStatus == 1 || proStatus == 4)
+            {
+                text = "reDownLoad";
+                proStatus = 4;
+            }
+            else if(proStatus == 2 || proStatus == 5)
+            {
+                text = "reUpdate";
+                proStatus = 5;
+            }
+        }
+    }
+    else if(flag == 3)
+    {
+        text = "DownLoad";
+        proStatus = 1;
+    }
+    btnStatus->setText(text);
+    btnStatus->setEnabled(true);
 }
 
+void Element::setReleaseId(int id)
+{
+    releaseId = id;
+}
+
+//1-下载,2-更新,3-打开
 void Element::btnStatusSlot()
 {
-    if(proStatus == 1)
+    qDebug()<<__FUNCTION__<<" proStatus = "<<proStatus<<endl;
+    if(proStatus == 1 || proStatus == 4)
     {
-        btnStatus->setText("NULL");
+        btnStatus->setText("正在下载");
+        btnStatus->setEnabled(false);
+        emit installPackage(btnName->toolTip(),releaseId);
     }
-    else if(proStatus == 2)
+    else if(proStatus == 2 || proStatus == 5)
     {
-        btnStatus->setText("NULL");
+        btnStatus->setText("正在更新");
+        btnStatus->setEnabled(false);
+        emit updatePackage(btnName->toolTip(),releaseId);
     }
     else if(proStatus == 3)
     {
-        btnStatus->setText("NULL");
+        process.start(exebleFile);
     }
     else
     {
@@ -175,13 +241,23 @@ void Element::initStar(double num)
 
     for(int i = 0;i < (int)num;i++)
     {
-        labelStar[i].setPixmap(QPixmap(":/image/gift.png"));
+        labelStar[i].setPixmap(QPixmap(":/image/refresh.png"));
     }
 
     if(num - (int)num > 0)
     {
         labelStar[(int)num].setPixmap(QPixmap(":/image/gift.png"));
     }
+}
+
+void Element::setExeFile(QString exe)
+{
+    exebleFile = exe;
+}
+
+QString Element::getBtnName()
+{
+    return btnName->toolTip();
 }
 
 bool Element::eventFilter(QObject *target, QEvent *event)
