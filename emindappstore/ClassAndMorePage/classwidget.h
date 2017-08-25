@@ -49,7 +49,7 @@ private:
     //分类的标志
     int category;
     //空白widget
-    QWidget *spaceWidget;
+    QWidget **spaceWidget;
     int spaceWidgetNum;
     int elementNum;
 
@@ -61,11 +61,13 @@ signals:
     void moreShow(int);
     void installApp(QString,int);
     void updateApp(QString,int);
+    void detailspage(int);
 
 protected slots:
     void sendMoreShow(int i);
     void sendInstallApp(QString name,int id);
     void sendUpdateApp(QString name,int id);
+    void detailspageSig(int id);
 };
 
 #endif // CLASSWIDGETH

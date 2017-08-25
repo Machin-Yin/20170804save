@@ -10,21 +10,30 @@ class QHBoxLayout;
 class QVBoxLayout;
 class QLabel;
 class QFrame;
-class QTableView;
 class QQuickWidget;
 class QQmlEngine;
 class QScrollArea;
+class RecommendWidget;
+class ShareData;
+class JSONFUNC;
 
 class HomeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit HomeWidget(QWidget *parent = 0);
+    HomeWidget(QWidget *parent, ShareData *data, JSONFUNC *json);
+    ~HomeWidget();
+
+
+protected:
+    void mousePressEvent(QMouseEvent* event);
 
 signals:
+    void toDetailPage(int);
 
 public slots:
-    void refreshPg(int);
+    void refreshPage(int);
+    void setElement();
 
 private:
     QHBoxLayout *hlyPicture;
@@ -32,11 +41,12 @@ private:
     QLabel *lbHots;
     QFrame *line1;
     QFrame *line2;
-    QTableView *tbvHots;
     QHBoxLayout *hly1;
     QQuickWidget *imgBox;
     QQmlEngine *qmlEngine;
     QScrollArea *scrollArea;
+    RecommendWidget *recommWidget;
+    ShareData *shareData;
 };
 
 #endif // HOMEWIDGET_H

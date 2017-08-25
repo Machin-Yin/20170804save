@@ -10,27 +10,31 @@ ClassWidget::ClassWidget(QWidget *parent) :
     classtop = new ClassTop();
 
     gridLayout = new QGridLayout();
-    gridLayout->setSpacing(24);
-    gridLayout->setContentsMargins(16,0,16,0);
+//    gridLayout->setContentsMargins(16,0,16,0);
 
     mainLayout = new QVBoxLayout();
     mainLayout->addWidget(classtop->widget);
     mainLayout->addLayout(gridLayout);
+    mainLayout->setSpacing(32);
+    mainLayout->setContentsMargins(16,24,8,0);
 
     widget->setLayout(mainLayout);
     widget->installEventFilter(this);
 
     connect(classtop,SIGNAL(showAll(int)),this,SLOT(sendMoreShow(int)));
 
-    spaceWidget = new QWidget[SPACEWIDGET];
-    for(int i =0 ;i<5;i++)
+    spaceWidget = new QWidget*[SPACEWIDGET];
+    for(int i =0 ;i<SPACEWIDGET;i++)
     {
-        spaceWidget[i].setFixedSize(144,74);
+        QWidget *p = new QWidget();
+        spaceWidget[i] = p;
+        spaceWidget[i]->setFixedSize(144,74);
     }
 }
 
 ClassWidget::~ClassWidget()
 {
+    delete[] tt;
 }
 //设置分类标志
 void ClassWidget::setCategory(int cate)
@@ -95,7 +99,7 @@ bool ClassWidget::eventFilter(QObject *target, QEvent *event)
                 //空Widget每次都要清空
                 for(int i = 0;i < SPACEWIDGET;i++)
                 {
-                    gridLayout->removeWidget(&spaceWidget[i]);
+                    gridLayout->removeWidget(spaceWidget[i]);
                 }
 
             }
@@ -123,7 +127,7 @@ bool ClassWidget::eventFilter(QObject *target, QEvent *event)
             for(int i = 0;i<(column - demoElement.size());i++)
             {
                 //                qDebug()<<(column - demoElement.size())<<endl;
-                gridLayout->addWidget(&spaceWidget[i],0,demoElement.size()+i,1,1,Qt::AlignLeft);
+                gridLayout->addWidget(spaceWidget[i],0,demoElement.size()+i,1,1,Qt::AlignLeft);
             }
 
             //隐藏多余的控件
@@ -137,6 +141,20 @@ bool ClassWidget::eventFilter(QObject *target, QEvent *event)
                 for(int i = 0;i<(row*column);i++)
                 {
                     demoElement.at(i)->show();
+                }
+            }
+
+            if(demoElement.size() > 15 && demoElement.size() <= 18)
+            {
+                if(column == 5)
+                {
+                    for(int i = 15;i<demoElement.size();i++)
+                        demoElement.at(i)->hide();
+                }
+                else if(column == 6)
+                {
+                    for(int i = 15;i<demoElement.size();i++)
+                        demoElement.at(i)->show();
                 }
             }
         }
@@ -159,6 +177,11 @@ void ClassWidget::sendInstallApp(QString name, int id)
 void ClassWidget::sendUpdateApp(QString name, int id)
 {
     emit updateApp(name,id);
+}
+
+void ClassWidget::detailspageSig(int id)
+{
+    emit  detailspage(id);
 }
 
 //设置分类项名字
@@ -214,6 +237,7 @@ void ClassWidget::initElement(const ELEMENTNUMBERMAP &classElementNumMap)
         demoElement.append(tt[i].baseWidget);
         connect(&tt[i],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
         connect(&tt[i],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
+        connect(&tt[i],SIGNAL(detailspageSig(int)),this,SLOT(detailspageSig(int)));
     }
 }
 

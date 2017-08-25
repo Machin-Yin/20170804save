@@ -55,11 +55,19 @@ protected slots:
     void onBtnManager();
     void mousePressEvent(QMouseEvent* event);
     void toPageSearch();
-    void toPageDetail();
+    void toPageDetail(int);
     void nextPage();
     void backPage();
     void refreshPage();
     void onPageChanged(int index);
+
+private:
+    void createConnections();
+    void createWindow();
+    void initVariables();
+    void layoutWindow();
+    void showSearchImg();
+
 
 private:
 

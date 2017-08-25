@@ -21,9 +21,11 @@ void JSONFUNC::getCategoryNum()
     manager->get(QNetworkRequest(QUrl(httpAddress)));
 }
 
+//array -> releaseId , size -> product Number
+//get jsondata to sharedata
 void JSONFUNC::getUpdateRelease(int *array,int size)
 {
-    qDebug() << __FUNCTION__;
+//    qDebug() << __FUNCTION__;
     QByteArray dataArr;
     QString dataStr = "[";
     for(int i=0;i<size;i++)
@@ -39,7 +41,7 @@ void JSONFUNC::getUpdateRelease(int *array,int size)
     dataStr += "]";
 
     dataArr = dataStr.toLatin1();
-    //    qDebug()<<"dataArr == "<<dataArr<<endl;
+//        qDebug()<<"dataArr == "<<dataArr<<endl;
 
     QString baseUrl = ipString +"releases";
     QUrl url(baseUrl);
@@ -72,6 +74,7 @@ void JSONFUNC::getScreenImage()
     jsonFlag = SCRIMAGE;
     //    manager->get();
 }
+
 
 void JSONFUNC::getComment(int *array)
 {
@@ -232,6 +235,7 @@ void JSONFUNC::getProducts(QJsonObject obj)
             QString prourl;
             QString prodesc;
             QString exefile;
+            QString packname;
 
             QMap<int,int>::iterator it;
             int y = 0;
@@ -374,7 +378,20 @@ void JSONFUNC::getProducts(QJsonObject obj)
                     }
                     else
                     {
-                        prodesc = "";
+                        exefile = "";
+                    }
+
+                    if(obj2.contains("package_name"))
+                    {
+                        QJsonValue name = obj2.take("package_name");
+                        if(name.isString())
+                        {
+                            packname = name.toString();
+                        }
+                    }
+                    else
+                    {
+                        packname = "";
                     }
 
                     if(obj2.contains("release_grade"))
@@ -409,8 +426,8 @@ void JSONFUNC::getProducts(QJsonObject obj)
                         gracount = 0;
                     }
 //                    qDebug()<<"gracount : "<<gracount<<endl;
-                    qDebug()<<"icourl : "<<icourl<<endl;
-//                    qDebug()<<"proname : "<<prodesc<<endl;
+//                    qDebug()<<"icourl : "<<icourl<<endl;
+//                    qDebug()<<"packname ::::::: "<<packname<<endl;
 //                    if(y<10)
 //                    {
 //                        icourl = QString("%1%2%3").arg("http://k2.jsqq.net/uploads/allimg/1705/7_170524143440_").arg(y+1).arg(".jpg");
@@ -423,7 +440,7 @@ void JSONFUNC::getProducts(QJsonObject obj)
 //                    }
 
                     if(lnProductId != 0 && cateid != 0)
-                        jsonData->classStrMap.insert(lnProductId,CLASSSTRUCT(cateid,relid,1,icourl,proname,gracount,prodesc,exefile));
+                        jsonData->classStrMap.insert(lnProductId,CLASSSTRUCT(cateid,relid,1,icourl,proname,gracount,prodesc,exefile,packname));
                 }
             }
         }
@@ -442,7 +459,7 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
         {
             QJsonArray str = test.toArray();
             int proid = 0;
-            //                int relid = 0;
+            int relid = 0;
             QString ver;
             int packsize = 0;
             QString chaglog;
@@ -450,6 +467,7 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
             QString downurl;
             QString icourl;
             QString exefile;
+            QString packname;
 
             for(int i = 0;i < str.size();i++ )
             {
@@ -470,6 +488,19 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
                     else
                     {
                         proid = 0;
+                    }
+
+                    if(obj2.contains("ID"))
+                    {
+                        QJsonValue releaseid = obj2.take("ID");
+                        if(releaseid.isDouble())
+                        {
+                            relid = releaseid.toInt();
+                        }
+                    }
+                    else
+                    {
+                        relid = 0;
                     }
 
                     if(obj2.contains("product_name"))
@@ -530,7 +561,7 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
                         QJsonValue iconurl = obj2.take("icon_url");
                         if(iconurl.isString())
                         {
-                            icourl = iconurl.toString();
+                            icourl = iconString + iconurl.toString();
                         }
                     }
                     else
@@ -546,6 +577,11 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
                             downurl = downloadurl.toString();
                         }
                     }
+                    else
+                    {
+                        downurl = "";
+                    }
+
                     if(obj2.contains("executable_file"))
                     {
                         QJsonValue exe = obj2.take("executable_file");
@@ -556,22 +592,35 @@ void JSONFUNC::getUpdateRelease(QJsonObject obj)
                     }
                     else
                     {
-                        downurl = "";
+                        exefile = "";
+                    }
+
+                    if(obj2.contains("package_name"))
+                    {
+                        QJsonValue name = obj2.take("package_name");
+                        if(name.isString())
+                        {
+                            packname = name.toString();
+                        }
+                    }
+                    else
+                    {
+                        packname = "";
                     }
 
 //                    qDebug()<<"productname : "<<name<<endl;
-//                    qDebug()<<"proid : "<<proid<<endl;
+                    qDebug()<<"proid : "<<proid<<endl;
 //                    qDebug()<<"chaglog : "<<chaglog<<endl;
-//                    qDebug()<<"packsize : "<<packsize<<endl;
+                    qDebug()<<"packsize :: "<<packsize<<endl;
 //                    qDebug()<<"icourl : "<<icourl<<endl;
 //                    qDebug()<<"downurl : "<<downurl<<endl;
-//                    qDebug()<<"ver : "<<ver<<endl;
+                    qDebug()<<"ver : "<<ver<<endl;
 
                     if(proid != 0)
-                        jsonData->updateStrMap.insert(proid,UPDATESTRUCT(proid,ver,icourl,name,chaglog,downurl,packsize,exefile));
+                        jsonData->updateStrMap.insert(relid,UPDATESTRUCT(proid,ver,icourl,name,chaglog,downurl,packsize,exefile,packname));
                 }
             }
-            qDebug() << "updateStrMap == " << jsonData->updateStrMap.count();
+//            qDebug() << "updateStrMap == " << jsonData->updateStrMap.count();
             emit updateIsOk();
         }
     }
@@ -830,8 +879,7 @@ void JSONFUNC::getComment(QJsonObject obj)
                     }
 
                     if(proId != 0 && id != 0)
-                    jsonData->commentMap.insert(proId,COMMENT(id,relId,userId,commentText,commentGrade,commentDate));
-                    qDebug()<<"the comment is :::::::: "<<commentText;
+                    jsonData->commentMap.insert(relId,COMMENT(id,relId,userId,commentText,commentGrade,commentDate));
                 }
             }
         }

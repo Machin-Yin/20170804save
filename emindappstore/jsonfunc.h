@@ -35,8 +35,6 @@ public:
     void getScreenImage();
     void getComment(int *array);
 
-    ShareData *jsonData;
-
 protected slots:
     void jsonAnalysis(QNetworkReply *reply);
 
@@ -57,7 +55,7 @@ private:
     void getRecommend(QJsonObject obj);
     void getScreenImage(QJsonObject obj);
     void getComment(QJsonObject obj);
-
+    ShareData *jsonData;
     int a = 0;
 
     QString releaseStr;

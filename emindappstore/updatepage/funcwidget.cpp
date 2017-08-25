@@ -6,15 +6,22 @@ FuncWidget::FuncWidget(QWidget *parent, QString funcStr) : QWidget(parent),funcT
     funcLayout = new QHBoxLayout;
 
     funcLayout->setMargin(0);
+    funcLayout->setSpacing(0);
     leftLayout = new QVBoxLayout;
+//    leftLayout->setMargin(0);
+//    leftLayout->setSpacing(0);
     rightLayout = new QVBoxLayout;
+//    rightLayout->setMargin(0);
+//    rightLayout->setSpacing(0);
     funcLabel = new QLabel();
     nfuncEdit = new QTextEdit();
     hideButton = new QPushButton();
 
-    funcLabel->setText(tr(" 新版特性"));
+    funcLabel->setText(tr(" New Features"));
+    funcLabel->setStyleSheet("font: #555555; font-size:14px;");
+
     nfuncEdit->setText(funcStr);
-    nfuncEdit->setStyleSheet("border: 0;" "background:white");
+    nfuncEdit->setStyleSheet("border: 0;" "background-color:transparent; font: #969696;");
     nfuncEdit->setReadOnly(true);
     nfuncEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -23,13 +30,12 @@ FuncWidget::FuncWidget(QWidget *parent, QString funcStr) : QWidget(parent),funcT
     hideButton->setIcon(pixmap);
     hideButton->setIconSize(QSize(44,44));
 
-    funcLayout->addSpacing(80);
+    funcLayout->addSpacing(96);
     funcLayout->addLayout(leftLayout);
-    leftLayout->addSpacing(20);
+    leftLayout->addSpacing(15);
     leftLayout->addWidget(funcLabel);
-    leftLayout->addSpacing(12);
+    leftLayout->addSpacing(8);
     leftLayout->addWidget(nfuncEdit);
-    leftLayout->addSpacing(24);
     funcLayout->addSpacing(100);
     funcLayout->addLayout(rightLayout);
     rightLayout->addStretch();
@@ -52,9 +58,10 @@ QPushButton *FuncWidget::getHideButton()
 
 bool FuncWidget::event(QEvent *event)
 {
-    if(event->type() == QEvent::Resize)
+    if(event->type() == QEvent::Paint)
     {
-        int docheight = nfuncEdit->document()->size().height();
+        int docheight = nfuncEdit->document()->size().height()-30;
+        nfuncEdit->size().setHeight(docheight);
         emit sigTextHeight(docheight);
         return true;
     }

@@ -35,6 +35,8 @@ public:
 
 private slots:
     void btnStatusSlot();
+    void btnNameSlot();
+    void btnImageSlot();
     void replyFinished(QNetworkReply *reply);
 
 private:
@@ -65,6 +67,7 @@ protected:
 signals:
     void installPackage(QString,int);
     void updatePackage(QString,int);
+    void detailspageSig(int);
 };
 
 #endif // ELEMENTH

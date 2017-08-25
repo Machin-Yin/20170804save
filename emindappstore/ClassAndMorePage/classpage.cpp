@@ -7,8 +7,8 @@ ClassPage::ClassPage(QWidget *parent, JSONFUNC *json, ShareData *data) : QWidget
     shareData = data;
     jsonFunc = json;
     jsonFunc->getCategoryNum();
-    moreClassWidget = new MorePage();
-    scrollClass->resize(QSize(960,640));
+    moreClassWidget = new MorePage(this);
+    scrollClass->resize(QSize(980,640));
     scrollClass->setMaximumWidth(1200);
     pageClassWidget = new QWidget();
 
@@ -16,6 +16,12 @@ ClassPage::ClassPage(QWidget *parent, JSONFUNC *json, ShareData *data) : QWidget
     connect(jsonFunc,SIGNAL(categoryIsOk(int)),this,SLOT(createClassWindow(int)),Qt::QueuedConnection);
     connect(jsonFunc,SIGNAL(productIsOk()),this,SLOT(setClassElement()),Qt::QueuedConnection);
     //    connect(jsonFunc,SIGNAL(updateIsOk()),this,SLOT(testUpdateMap()));
+}
+
+ClassPage::~ClassPage()
+{
+    delete[] classWidget;
+    delete pageClassWidget;
 }
 
 bool ClassPage::event(QEvent *event)
@@ -36,13 +42,17 @@ void ClassPage::resetStatus()
     }
 }
 
+void ClassPage::detailspage(int id)
+{
+    emit detailspageSig(id);
+}
+
 //创建分类页
 void ClassPage::createClassWindow(int catenum)
 {
     cateNum = catenum;
     classWidget = new ClassWidget[catenum];
     vbClasslayout = new QVBoxLayout();
-//    pageClassWidget = new QWidget();
     vbClasslayout = new QVBoxLayout();
     scrollClass->setFrameShape(QFrame::NoFrame); //去除窗口边框
 
@@ -51,6 +61,7 @@ void ClassPage::createClassWindow(int catenum)
         connect(&classWidget[i],SIGNAL(moreShow(int)),this,SLOT(setMoreShow(int)));
         connect(&classWidget[i],SIGNAL(installApp(QString,int)),this,SLOT(sendInstallPackage(QString,int)));
         connect(&classWidget[i],SIGNAL(updateApp(QString,int)),this,SLOT(sendUpdatePackage(QString,int)));
+        connect(&classWidget[i],SIGNAL(detailspage(int)),this,SLOT(detailspage(int)));
 
         classWidget[i].setCategory(i);
         classWidget[i].setTopName(shareData->categoryMap);
@@ -58,6 +69,7 @@ void ClassPage::createClassWindow(int catenum)
     }
 
     pageClassSpacer =new QSpacerItem(24,24,QSizePolicy::Minimum,QSizePolicy::Expanding);
+    pageClassWidget->setObjectName("pageClassWidget");
     scrollClass->setWidget(pageClassWidget);
     vbClasslayout->addSpacerItem(pageClassSpacer);
     vbClasslayout->setMargin(0);
@@ -110,50 +122,111 @@ void ClassPage::testUpdateMap()
 void ClassPage::sendInstallPackage(QString name, int id)
 {
     emit installpackage(name,id);
+    for(auto item = shareData->classStrMap.begin();item != shareData->classStrMap.end();++item)
+    {
+        if(item.value().releaseId == id)
+            item.value().proStatus = DOWNLOADING;
+    }
 }
 
 void ClassPage::sendUpdatePackage(QString name, int id)
 {
     emit updatePackage(name,id);
+    for(auto item = shareData->classStrMap.begin();item != shareData->classStrMap.end();++item)
+    {
+        if(item.value().releaseId == id)
+            item.value().proStatus = UPDATING;
+    }
 }
 
-//1:下载 2:更新 3:卸载
+//1:下载 2:更新 9:卸载 4:重新下载 5:重新更新 6:正在卸载
 void ClassPage::updatePackageStatus(QString name, bool bo,int flag)
 {
     qDebug()<<__FUNCTION__<<endl;
     for(auto item = shareData->classStrMap.begin();item != shareData->classStrMap.end();++item)
     {
+
         if(name == item.value().proName)
         {
-          for(int i = 0;i<cateNum;i++)
+            if(flag == DOWNLOAD || flag == UPDATE)
             {
-                if(classWidget[i].getCategory() == item.value().category)
+                if(bo)
                 {
-                    for(int j = 0; j < classWidget[i].getElementNum();j++)
+                    item.value().proStatus = OPEN;
+                }
+                else
+                {
+                    if(flag == DOWNLOAD)
+                        item.value().proStatus = REDOWNLOAD;
+                    else if(flag == UPDATE)
+                        item.value().proStatus = REUPDATE;
+                }
+            }
+            else if(flag == UNINSTALL)
+            {
+                if(bo)
+                {
+                    item.value().proStatus = DOWNLOAD;
+                }
+                else
+                {
+                    item.value().proStatus = OPEN;
+                }
+            }
+            else if(flag == UNINSTALLING)
+            {
+                item.value().proStatus = UNINSTALLING;
+            }
+            else if(flag == UPDATING)
+            {
+                item.value().proStatus = UPDATING;
+            }
+            else if(flag == REDOWNLOAD)
+            {
+                item.value().proStatus = DOWNLOADING;
+            }
+            else if(flag == REUPDATE)
+            {
+                item.value().proStatus = UPDATING;
+            }
+        }
+
+        for(int i = 0;i<cateNum;i++)
+        {
+            if(classWidget[i].getCategory() == item.value().category)
+            {
+                for(int j = 0; j < classWidget[i].getElementNum();j++)
+                {
+                    if(classWidget[i].getTt(j)->getBtnName()== name )
                     {
-                        if(classWidget[i].getTt(j)->getBtnName()== name)
+                        if(flag == DOWNLOAD || flag == UPDATE)
                         {
-                            if(flag == 1 || flag == 2)
-                            {
-                                classWidget[i].getTt(j)->updateProStatus(bo,flag);
-                                if(bo)
-                                {
-                                    item.value().proStatus = 3;
-                                }
-                                else
-                                {
-                                    item.value().proStatus = 4;
-                                }
-                            }
-                            else if(flag == 3)
-                            {
-                                classWidget[i].getTt(j)->updateProStatus(bo,flag);
-                                item.value().proStatus = 1;
-                            }
+                            classWidget[i].getTt(j)->updateProStatus(bo,flag);
+                        }
+                        else if(flag == UNINSTALL)
+                        {
+
+                            classWidget[i].getTt(j)->updateProStatus(bo,UNINSTALL);
+                        }
+                        else if(flag == UNINSTALLING)
+                        {
+                            classWidget[i].getTt(j)->updateProStatus(bo,flag);
+                        }
+                        else if(flag == UPDATING)
+                        {
+                            classWidget[i].getTt(j)->updateProStatus(bo,UPDATING);
+                        }
+                        else if(flag == REDOWNLOAD || flag == REUPDATE)
+                        {
+                            classWidget[i].getTt(j)->updateProStatus(bo,flag);
                         }
                     }
+
                 }
             }
         }
+
     }
 }
+
+

@@ -9,22 +9,18 @@
 #include "../jsonfunc.h"
 #include "../sharedata.h"
 
-//#define MAXUPNUM 100
 
-enum{
-    DOWNLOAD = 1,
-    UPDATE,
-    OPEN,
-    REDOWNLOAD,
-    REUPDATE
+struct INSTALLEDSTRUCT{
+    QString appName;
+    QString proImage;
+    QString exeFile;
 };
-
 
 class PkUpdates : public QObject
 {
     Q_OBJECT
 public:
-    explicit PkUpdates(QObject *parent ,JSONFUNC *jsonfunc);
+    explicit PkUpdates(QObject *parent , JSONFUNC *jsonfunc, ShareData *sharedata);
     int count() const;
     int insCount() const;
     QStringList getPacName() const;
@@ -34,13 +30,14 @@ public:
     void getMagData();
     void installPackage(QString packageName);
     QString transPackSize(const double &size);
-
+    ShareData *mainShareData;
     ShareData *shareData;
+    JSONFUNC *mainJsonFunc;
     JSONFUNC *jsonFunc;
 signals:
     void updatesChanged();
     void getUpdFinished(QStringList);
-    void getInsFinished(QVariantMap);
+    void getInsFinished(QMap<QString,INSTALLEDSTRUCT>);
     void upReleaseAry(int *,int);
     void sigUpdateData(UPDATESTRUCTMAP);
     void updateOk();

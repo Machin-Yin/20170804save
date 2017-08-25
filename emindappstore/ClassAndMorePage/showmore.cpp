@@ -3,19 +3,19 @@
 #define MAXNUMBER 360
 #define SHOWMOREROW 72
 #define SHOWMORECOLUMN 5
+#define SPACEWIDGET 5
 
 ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
 {
-    moreWidget = new QWidget();
     moreClassTop = new ClassTop();
     moreClassTop->setTopbtnHide();
     mainLayout = new QVBoxLayout();
     moreElement = new Element[MAXNUMBER];
     eleLayout = new QGridLayout();
     eleLayout->setSpacing(24);
-    moreWidget->setMinimumSize(640,0);
-    moreWidget->installEventFilter(this);
-    eleLayout->setContentsMargins(16,0,16,0);
+    this->setMinimumSize(640,0);
+    this->installEventFilter(this);
+    eleLayout->setSpacing(48);
     elementNumber = 0;
 
     int maxEleNumber = 0;
@@ -27,6 +27,7 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
             moreElement[maxEleNumber].baseWidget->hide();
             connect(&moreElement[maxEleNumber],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
             connect(&moreElement[maxEleNumber],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
+            connect(&moreElement[maxEleNumber],SIGNAL(detailspageSig(int)),this,SLOT(sendDetailSig(int)));
             if(maxEleNumber < (MAXNUMBER-1))
             {
                 maxEleNumber++;
@@ -39,15 +40,24 @@ ShowMore::ShowMore(QWidget *parent) : QWidget(parent)
     }
 
     categoryFlag = -1;
-    spaceWidget = new QWidget[5];
+    mainLayout->setSpacing(32);
+    mainLayout->setContentsMargins(16,24,16,0);
     mainLayout->addWidget(moreClassTop->widget);
     mainLayout->addLayout(eleLayout);
-    moreWidget->setLayout(mainLayout);
+    this->setLayout(mainLayout);
+
+    spaceWidget = new QWidget*[SPACEWIDGET];
+    for(int i =0 ;i<5;i++)
+    {
+        QWidget *p = new QWidget();
+        spaceWidget[i] = p;
+        spaceWidget[i]->setFixedSize(144,74);
+    }
 }
 
 ShowMore::~ShowMore()
 {
-    delete moreElement;
+    delete[] moreElement;
 }
 
 //设置软件属性
@@ -106,7 +116,7 @@ void ShowMore::setElementNum(const ELEMENTNUMBERMAP &elementNum)
 
 bool ShowMore::eventFilter(QObject *watched, QEvent *event)
 {
-    if(watched == moreWidget)
+    if(watched == this)
     {
         if(event->type() == QEvent::Resize)
         {
@@ -115,7 +125,7 @@ bool ShowMore::eventFilter(QObject *watched, QEvent *event)
                 return true;
             }
 
-            int column = (moreWidget->size().width()+48)/192;
+            int column = (this->size().width()+48)/192;
             int row;
 
             if(column > 6)
@@ -143,7 +153,8 @@ bool ShowMore::eventFilter(QObject *watched, QEvent *event)
                 //现有的控件不必清空,只是对现有的控件进行排序,空Widget每次都要清空
                 for(int i = 0;i < 5;i++)
                 {
-                    eleLayout->removeWidget(&spaceWidget[i]);
+                    eleLayout->removeWidget(spaceWidget[i]);
+                    spaceWidget[i]->hide();
                 }
 
             }
@@ -170,7 +181,8 @@ bool ShowMore::eventFilter(QObject *watched, QEvent *event)
             //为不够一行的软件类添加空控件，使布局好看
             for(int i = 0;i<(column - elementNumber);++i)
             {
-                eleLayout->addWidget(&spaceWidget[i],0,elementNumber+i,1,1,Qt::AlignLeft);
+                eleLayout->addWidget(spaceWidget[i],0,elementNumber+i,1,1,Qt::AlignLeft);
+                spaceWidget[i]->show();
             }
 
             //隐藏多余的控件
@@ -206,7 +218,27 @@ void ShowMore::updatePackageStatus(QString name, bool bo,int flag)
     {
         if(name == moreElement[i].getBtnName())
         {
-            moreElement[i].updateProStatus(bo,flag);
+            if(flag == DOWNLOAD || flag == UPDATE)
+            {
+                moreElement[i].updateProStatus(bo,flag);
+            }
+            else if(flag == UNINSTALL)
+            {
+                moreElement[i].updateProStatus(bo,UNINSTALL);
+            }
+            else if(flag == UNINSTALLING || flag == UPDATING)
+            {
+                moreElement[i].updateProStatus(bo,flag);
+            }
+            else if(flag == REDOWNLOAD || flag == REUPDATE)
+            {
+                moreElement[i].updateProStatus(bo,flag);
+            }
         }
     }
+}
+
+void ShowMore::sendDetailSig(int id)
+{
+    emit detailspageSig(id);
 }

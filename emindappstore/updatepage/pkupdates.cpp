@@ -1,18 +1,20 @@
 #include <QDebug>
+#include <QSettings>
 #include <QCoreApplication>
 #include "pkupdates.h"
 
-PkUpdates::PkUpdates(QObject *parent, JSONFUNC *jsonfunc) :
+PkUpdates::PkUpdates(QObject *parent, JSONFUNC *jsonfunc, ShareData *sharedata ) :
     QObject(parent),
     m_updatesTrans(Q_NULLPTR),
     m_cacheTrans(Q_NULLPTR),
     m_packagesTrans(Q_NULLPTR)
-{    
-//    shareData = new ShareData();
-//    jsonFunc = new JSONFUNC(shareData);
-    jsonFunc = jsonfunc;
-//    sigFlag = 1;
-//    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::updatesChanged, this, &PkUpdates::onUpdatesChanged,Qt::QueuedConnection);
+{
+    mainShareData = sharedata;
+    mainJsonFunc = jsonfunc;
+    shareData = new ShareData();
+    jsonFunc = new JSONFUNC(shareData);
+    //    sigFlag = 1;
+    //    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::updatesChanged, this, &PkUpdates::onUpdatesChanged,Qt::QueuedConnection);
     //    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::networkStateChanged, this, &PkUpdates::networkStateChanged);
 }
 
@@ -64,7 +66,8 @@ void PkUpdates::onPackage(PackageKit::Transaction::Info info, const QString &pac
     QString packageName = PackageKit::Transaction::packageName(packageID);
     qDebug() << __FUNCTION__ << ": Got update package:" << packageID;
 
-    switch (info) {
+    switch (info)
+    {
     case PackageKit::Transaction::InfoBlocked:
         return;
     default:
@@ -102,7 +105,6 @@ void PkUpdates::onUpdateFinished(PackageKit::Transaction::Exit status, uint runt
     }
 
 }
-
 
 void PkUpdates::onFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
@@ -142,7 +144,6 @@ void PkUpdates::onFinished(PackageKit::Transaction::Exit status, uint runtime)
         if (status == PackageKit::Transaction::ExitSuccess)
         {
             getInstalled();
-
             qDebug() << "Total number of Packages Installed: " << insCount() << endl;
         }
         else
@@ -159,14 +160,14 @@ void PkUpdates::getUpRelease()
     int releaseAry[m_upNameList.count()];
     int num = 0;
     qDebug()<< "m_upNameList.count() :" << m_upNameList.count();
-    qDebug()<< "jsonFunc->jsonData->classStrMap.count() :" << jsonFunc->jsonData->classStrMap.count();
+    qDebug()<< "mainJsonFunc->jsonData->classStrMap.count() :" << mainShareData->classStrMap.count();
     QMap<int,CLASSSTRUCT>::iterator item;
     int status;
     for(int i = 0; i < m_upNameList.count(); i++)
     {
-        for(item = jsonFunc->jsonData->classStrMap.begin(); item != jsonFunc->jsonData->classStrMap.end(); item++)
+        for(item = mainShareData->classStrMap.begin(); item != mainShareData->classStrMap.end(); item++)
         {
-            if(m_upNameList.at(i) == item.value().proName)
+            if(m_upNameList.at(i) == item.value().packageName)
             {
                 releaseAry[num] = item.value().releaseId;
                 num++;
@@ -190,25 +191,58 @@ void PkUpdates::getUpRelease()
 void PkUpdates::getInstalled()
 {
     qDebug() << __FUNCTION__;
-    QVariantMap installedMap;
-
+//    QVariantMap installedMap;
+    INSTALLEDSTRUCT instruct;
+    QMap<QString,INSTALLEDSTRUCT> installedMap;
     QMap<int,CLASSSTRUCT>::iterator item1;
     QVariantMap::iterator iter;
 
     for(iter = m_packagesList.begin(); iter != m_packagesList.end(); iter++)
     {
-        for(item1 = jsonFunc->jsonData->classStrMap.begin(); item1 != jsonFunc->jsonData->classStrMap.end(); item1++)
+        for(item1 = mainShareData->classStrMap.begin(); item1 != mainShareData->classStrMap.end(); item1++)
         {
             QString packName = PackageKit::Daemon::packageName(iter.key());
 
-            if(packName == item1.value().proName)
+            if(packName == item1.value().packageName)
             {
-                installedMap.insert(iter.key(),item1.value().proImage);
+                instruct.appName = item1.value().proName;
+                instruct.proImage = item1.value().proImage;
+                instruct.exeFile = item1.value().exeFile;
+                installedMap.insert(iter.key(),instruct);
                 int status = item1.value().proStatus;
                 if(status == DOWNLOAD)
                 {
                     item1.value().proStatus = OPEN;
                 }
+
+            }
+
+            QSettings settings( "upins.ini", QSettings::IniFormat );
+            QStringList keys = settings.childGroups();
+            QString section;
+            QString pkgName;
+            QString flag;
+            int saveCount = keys.count();
+            for(int i = 0; i < saveCount; i++)
+            {
+                section = keys.at(i);
+                settings.beginGroup(section);
+                pkgName = settings.value("PkgName").toString();
+                flag = settings.value("Flag").toString();
+                settings.endGroup();
+                if(pkgName == item1.value().packageName)
+                {
+                    if(flag == "INSTALLFLAG")
+                    {
+                        item1.value().proStatus = REDOWNLOAD;
+                    }
+                    else if(flag == "UPDATEFLAG")
+                    {
+                        item1.value().proStatus = REUPDATE;
+                    }
+//                    break;
+                }
+
             }
         }
     }
@@ -218,7 +252,7 @@ void PkUpdates::getInstalled()
 
 void PkUpdates::sendUpdateData()
 {
-    emit sigUpdateData(jsonFunc->jsonData->updateStrMap);
+    emit sigUpdateData(shareData->updateStrMap);
 }
 
 void PkUpdates::installUpdate(const QString &packageId)
@@ -253,8 +287,8 @@ void PkUpdates::installPackage(QString packageName)
 
 void PkUpdates::packageInstall(PackageKit::Transaction::Info, QString packageID, QString summary)
 {
-    qDebug() << "packageInstall() packageID " << packageID;
-    qDebug() << "packageInstall() summary " << summary;
+//    qDebug() << "packageInstall() packageID " << packageID;
+//    qDebug() << "packageInstall() summary " << summary;
     PackageKit::Transaction *installTransaction = PackageKit::Daemon::installPackage(packageID);
     connect(installTransaction,
             SIGNAL(finished(PackageKit::Transaction::Exit, uint)),
@@ -264,8 +298,8 @@ void PkUpdates::packageInstall(PackageKit::Transaction::Info, QString packageID,
 
 void PkUpdates::resolveFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
-    qDebug() << "testResolveFinished() status: " << status << endl;
-    qDebug() << "testResolveFinished() on of seconds: " << runtime << endl;
+//    qDebug() << "testResolveFinished() status: " << status << endl;
+//    qDebug() << "testResolveFinished() on of seconds: " << runtime << endl;
     if (status == PackageKit::Transaction::Exit::ExitSuccess)
     {
         qDebug() << "Package Resolve Success!";
@@ -280,7 +314,7 @@ void PkUpdates::resolveFinished(PackageKit::Transaction::Exit status, uint runti
 void PkUpdates::packageInstallFinished(PackageKit::Transaction::Exit status, uint runtime)
 {
     qDebug() << "packageInstallFinished() status: " << status << endl;
-    qDebug() << "packageInstallFinished() on of seconds: " << runtime << endl;
+//    qDebug() << "packageInstallFinished() on of seconds: " << runtime << endl;
     if (status == PackageKit::Transaction::Exit::ExitSuccess)
     {
         emit installSuccess();

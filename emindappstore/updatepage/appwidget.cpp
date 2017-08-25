@@ -5,8 +5,6 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 
-//#define SIZE_W 250
-
 AppWidget::AppWidget(QWidget *parent, QString headUrl, QString nameStr, QString sizeStr, QString verStr, QString logStr, QString pkgStr) : QWidget(parent),changeLog(logStr),pkgId(pkgStr),iconUrl(headUrl),appName(nameStr),appVersion(verStr),appSize(sizeStr)
 {
     appLayout = new QHBoxLayout();
@@ -14,23 +12,44 @@ AppWidget::AppWidget(QWidget *parent, QString headUrl, QString nameStr, QString 
     rightLayout = new QVBoxLayout();
     rightLayout->setMargin(0);
     bottomLayout = new QHBoxLayout();
+    bottomLayout->setMargin(0);
 
     headButton = new QPushButton();
     headButton->setFlat(true);
+    headButton->setStyleSheet("background: transparent;");
+    headButton->setFixedSize(64,64);
     getImage(headUrl);
 
     nameButton = new QPushButton();
     nameButton->setFlat(true);
-    nameButton->setMaximumWidth(180);
-    nameButton->setStyleSheet("text-align: left;");
-    nameButton->setText(nameStr);
+    nameButton->setMaximumWidth(120);
+    nameButton->setStyleSheet("color:#313131; font-weight: 500; font-size:14px; text-align: left; background: transparent;");
+    setBtnMetric(nameStr,nameButton);
 
     QStringList logList = logStr.split("#");
     introstr = logList.at(0);
+    QString newfuncstr = logList.at(1);
+    QStringList newfuncList = newfuncstr.split("*");
+    int count = newfuncList.count();
+    for(int i = 0; i < count; i++)
+    {
+        if(i != (count -1))
+        {
+            newFuncStr += "- " + newfuncList.at(i) + "\n";
+        }
+        else
+        {
+            newFuncStr += "- " + newfuncList.at(i);
+        }
+    }
     introLabel = new QLabel();
-
-    introLabel->setStyleSheet("border-right: 1px; border-style: solid; border-color: #cccccc;");
+    introLabel->setFrameStyle(QFrame::NoFrame);
+    introLabel->setStyleSheet("color:#969696;");
     introLabel->setText(introstr);
+
+    segLabel = new QLabel();
+    segLabel->setStyleSheet("background:#cccccc");
+    segLabel->setFixedSize(1,15);
 
     funcButton = new QPushButton();
     funcButton->setFlat(true);
@@ -51,11 +70,7 @@ AppWidget::AppWidget(QWidget *parent, QString headUrl, QString nameStr, QString 
 
     updateButton = new QPushButton();
     updateButton->setFixedSize(80,32);
-//    QPalette uppal;
-//    uppal.setColor(QPalette::ButtonText, QColor(2,122,255));
-//    updateButton->setPalette(uppal);
-//    updateButton->setStyleSheet("border: 1px solid #027aff  ; border-radius: 2px; ");
-//    updateButton->setStyleSheet("border-color: #027aff; border-width: 1px; border-style: solid; border-radius: 2px; ");
+    updateButton->setStyleSheet("font-weight: 500; color:#027aff; border: 1px solid #027aff  ; border-radius: 2px; ");
     updateButton->setText(tr("Update"));
 
     appLayout->addWidget(headButton);
@@ -67,6 +82,9 @@ AppWidget::AppWidget(QWidget *parent, QString headUrl, QString nameStr, QString 
     rightLayout->addLayout(bottomLayout);
     rightLayout->addStretch(24);
     bottomLayout->addWidget(introLabel);
+    bottomLayout->addSpacing(5);
+    bottomLayout->addWidget(segLabel);
+    bottomLayout->addSpacing(5);
     bottomLayout->addWidget(funcButton);
     bottomLayout->addStretch();
     appLayout->addWidget(sizeLabel);
@@ -98,15 +116,48 @@ void AppWidget::getImageFinished(QNetworkReply *reply)
     }
 }
 
-void AppWidget::onUpdateOk()
+void AppWidget::installUpdate(const QString &packageId)
 {
-    emit appUpdateFinished();
+//    qDebug() << __FUNCTION__ << "packageId == " << packageId;
+
+    PackageKit::Transaction::TransactionFlag flag = PackageKit::Transaction::TransactionFlagOnlyTrusted;
+    m_updatesTrans = PackageKit::Daemon::updatePackage(packageId, flag);
+
+//    connect(m_updatesTrans.data(), &PackageKit::Transaction::statusChanged, this, &PkUpdates::onStatusChanged);
+    connect(m_updatesTrans.data(), &PackageKit::Transaction::package, this, &AppWidget::onPackageUpdating);
+    connect(m_updatesTrans.data(), &PackageKit::Transaction::finished, this, &AppWidget::onUpdateFinished);
+
 }
 
-void AppWidget::onUpdateFailure()
+void AppWidget::onPackageUpdating(PackageKit::Transaction::Info info, const QString &packageID)
 {
-    qDebug() << __FUNCTION__;
-    emit appUpdateFailure();
+    Q_UNUSED(info);
+    const uint percent = m_updatesTrans->percentage();
+    qDebug() << "Package updating:" << packageID << "percent == " << percent;
+}
+
+void AppWidget::onUpdateFinished(PackageKit::Transaction::Exit status, uint runtime)
+{
+    Q_UNUSED(runtime);
+    if (status == PackageKit::Transaction::ExitSuccess)
+    {
+        emit updateOk();
+        return;
+    }
+    else
+    {
+        emit updateFailure();
+        qDebug() << "Update package didn't finish successfully";
+    }
+
+}
+
+void AppWidget::setBtnMetric(QString btnText,QPushButton *pushButton)
+{
+    QFontMetrics metric(btnText);
+    QString nameStr = metric.elidedText(btnText,Qt::ElideRight,pushButton->width());
+    pushButton->setText(nameStr);
+    pushButton->setToolTip(btnText);
 }
 
 bool AppWidget::event(QEvent *event)
@@ -154,6 +205,11 @@ QString AppWidget::getIntroStr()
     return introstr;
 }
 
+QString AppWidget::getNewFunStr()
+{
+    return newFuncStr;
+}
+
 QString AppWidget::getPkgId()
 {
     return pkgId;
@@ -176,5 +232,45 @@ QString AppWidget::getAppVer()
 QString AppWidget::getAppSize()
 {
     return appSize;
+}
+
+QString AppWidget::getExeFile()
+{
+    return exeFile;
+}
+
+QString AppWidget::getProductId()
+{
+    return productId;
+}
+
+void AppWidget::setProductId(int productid)
+{
+    productId = productid;
+}
+
+void AppWidget::setExeFile(QString exefile)
+{
+    exeFile = exefile;
+}
+
+int AppWidget::getReleaseId()
+{
+    return releaseId;
+}
+
+void AppWidget::setReleaseId(int relid)
+{
+    releaseId = relid;
+}
+
+QString AppWidget::getPkgName()
+{
+    return pkgName;
+}
+
+void AppWidget::setPkgName(QString pkgname)
+{
+    pkgName = pkgname;
 }
 

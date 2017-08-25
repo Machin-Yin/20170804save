@@ -6,7 +6,10 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QPointer>
 #include <QNetworkAccessManager>
+#include <packagekitqt5/PackageKit/Transaction>
+#include <packagekitqt5/PackageKit/Daemon>
 
 class AppWidget : public QWidget
 {
@@ -22,21 +25,37 @@ public:
     QString getChangeLog();
     QLabel *getIntroLabel();
     QString getIntroStr();
+    QString getNewFunStr();
     QString getPkgId();
     QString getHeadUrl();
     QString getAppName();
     QString getAppVer();
     QString getAppSize();
+    QString getExeFile();
+    QString getProductId();
+    void setProductId(int productid);
+    void setExeFile(QString exefile);
+    int getReleaseId();
+    void setReleaseId(int relid);
+    QString getPkgName();
+    void setPkgName(QString pkgname);
+    void installUpdate(const QString &packageId);
+    void setBtnMetric(QString btnText,QPushButton *pushButton);
 
 signals:
     void sigIntroResize();
     void appUpdateFinished();
     void appUpdateFailure();
+    void updateOk();
+    void updateFailure();
 
 public slots:
     void getImageFinished(QNetworkReply *reply);
-    void onUpdateOk();
-    void onUpdateFailure();
+//    void onUpdateOk();
+//    void onUpdateFailure();
+    void onPackageUpdating(PackageKit::Transaction::Info info, const QString &packageID);
+    void onUpdateFinished(PackageKit::Transaction::Exit status, uint runtime);
+
 private:
     QHBoxLayout *appLayout;
     QVBoxLayout *rightLayout;
@@ -44,7 +63,9 @@ private:
     QPushButton *headButton;
     QPushButton *nameButton;
     QLabel *introLabel;
+    QLabel *segLabel;
     QString introstr;
+    QString newFuncStr;
     QPushButton *funcButton;
     QLabel *sizeLabel;
     QLabel *versionLabel;
@@ -57,6 +78,12 @@ private:
     QString appName;
     QString appVersion;
     QString appSize;
+    QString exeFile;
+    int releaseId;
+    QString pkgName;
+    QString productId;
+    QPointer<PackageKit::Transaction> m_updatesTrans;
+
 
 };
 

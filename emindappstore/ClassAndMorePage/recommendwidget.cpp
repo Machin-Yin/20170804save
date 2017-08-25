@@ -32,12 +32,19 @@ RecommendWidget::RecommendWidget(QWidget *parent, ShareData *data) : QWidget(par
         }
     }
 
+    eleLayout->setSpacing(48);
     mainLayout->addWidget(classTop->widget);
     mainLayout->addLayout(eleLayout);
     mainLayout->addItem(spacer);
+    mainLayout->setSpacing(32);
     this->setLayout(mainLayout);
     this->installEventFilter(this);
     setTopName();
+}
+
+RecommendWidget::~RecommendWidget()
+{
+    delete[] element;
 }
 
 //设置软件属性
@@ -65,6 +72,7 @@ void RecommendWidget::setElement(const CLASSSTRUCTMAP &classStruct,const RECOMME
             element[i].setExeFile(item2.value().exeFile);
             connect(&element[i],SIGNAL(installPackage(QString,int)),this,SLOT(sendInstallApp(QString,int)));
             connect(&element[i],SIGNAL(updatePackage(QString,int)),this,SLOT(sendUpdateApp(QString,int)));
+            connect(&element[i],SIGNAL(detailspageSig(int)),this,SLOT(toDetailPage(int)));
             i++;
         }
     }
@@ -78,7 +86,7 @@ void RecommendWidget::setElement(const CLASSSTRUCTMAP &classStruct,const RECOMME
 //设置软件类名字
 void RecommendWidget::setTopName()
 {
-        classTop->setLabelData("Recommend");
+        classTop->setLabelData(tr("Recommend"));
 }
 
 
@@ -126,14 +134,15 @@ bool RecommendWidget::eventFilter(QObject *watched, QEvent *event)
             {
                 element[i].baseWidget->hide();
             }
-            for(int i = 0;i<(row*column);i++)
-            {
-                element[i].baseWidget->show();
-            }
         }
         else
         {
             qDebug()<<"(row * column) is error!!!"<<endl;
+        }
+
+        for(int i = 0;i<=num;i++)
+        {
+            element[i].baseWidget->show();
         }
         return true;
     }
@@ -154,9 +163,32 @@ void RecommendWidget::updatePackageStatus(QString name, bool bo,int flag)
 {
     for(int i=0;i<MAXNUMBER;i++)
     {
-        if(name == element[i].getBtnName())
+        if(name == element[i].toolTip())
         {
-            element[i].updateProStatus(bo,flag);
+
+            if(flag == DOWNLOAD || flag == UPDATE)
+            {
+                element[i].updateProStatus(bo,flag);
+            }
+            else if(flag == UNINSTALL)
+            {
+                element[i].updateProStatus(bo,UNINSTALL);
+            }
+            else if(flag == UNINSTALLING || flag == UPDATING)
+            {
+                element[i].updateProStatus(bo,flag);
+            }
+            else if(flag == REDOWNLOAD || flag == REUPDATE)
+            {
+                element[i].updateProStatus(bo,flag);
+            }
         }
     }
 }
+
+void RecommendWidget::toDetailPage(int id)
+{
+    emit toDetailSig(id);
+}
+
+

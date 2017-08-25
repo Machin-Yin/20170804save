@@ -18,10 +18,12 @@ class UpdatePage : public QWidget
 {
     Q_OBJECT
 public:
-    explicit UpdatePage(QWidget *parent,JSONFUNC *json);
+    explicit UpdatePage(QWidget *parent,JSONFUNC *json,ShareData *sharedata);
     void createUpdateWindow();
     void getUpdates();
     QString transPackSize(const double &size);
+    int getReleaseId();
+    void setReleaseId(int relid);
 
 private:
     QWidget *pageUpdateWidget;
@@ -37,10 +39,13 @@ private:
 
 signals:
     void done();
-    void theUpdateApp(QString, QString, QString, QString);
-    void appUpdateOk(QString, QString, QString);
+    void theUpdateApp(QString, QString, QString, QString, int, QString, QString);
+    void appUpdateOk(QString, QString, QString, QString, QString);
     void appUpdateFailure(QString);
     void updateStatusChanged();
+    void sigUpdateSuccess(QString,bool,int);
+    void updatePackageSuccess(QString,bool,int);
+    void updatePackage(QString,bool,int);
 
 public slots:
     void pageUpdateBtnClicked();
@@ -51,8 +56,11 @@ public slots:
     void onAppUpdateFinished();
     void onAppUpdateFailure();
     void getPackageUpdate();
-    void onInsdBtnClicked(QString appName);
+    void onUpBtnClicked(QString appName);
     void onStatusChanged();
+    void sendUpdateSuccess(QString appName);
+    void sendUpdateFailure(QString appName);
+
 
 };
 

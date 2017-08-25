@@ -10,7 +10,8 @@ class ClassPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit ClassPage(QWidget *parent,JSONFUNC *json,ShareData *data);
+    ClassPage(QWidget *parent,JSONFUNC *json,ShareData *data);
+    ~ClassPage();
     MorePage *moreClassWidget;
 
 private:
@@ -29,6 +30,7 @@ signals:
     void installpackage(QString,int);
     void updatePackage(QString,int);
     void packageStatus(QString,bool);
+    void detailspageSig(int);
 
 public slots:
     void setClassElement();
@@ -39,6 +41,7 @@ public slots:
     void sendUpdatePackage(QString name ,int id);
     void updatePackageStatus(QString name, bool bo, int flag);
     void resetStatus();
+    void detailspage(int id);
 };
 
 #endif // CLASSPAGE_H

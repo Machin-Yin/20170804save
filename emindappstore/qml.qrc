@@ -3,5 +3,6 @@
         <file>Imgboxer.qml</file>
         <file>Imgbox.qml</file>
         <file>Comment.qml</file>
+        <file>ImgDelegate.qml</file>
     </qresource>
 </RCC>

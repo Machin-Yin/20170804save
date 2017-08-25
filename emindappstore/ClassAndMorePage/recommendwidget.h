@@ -9,7 +9,8 @@ class RecommendWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RecommendWidget(QWidget *parent,ShareData *data);
+    RecommendWidget(QWidget *parent,ShareData *data);
+    ~RecommendWidget();
     void setElement(const CLASSSTRUCTMAP &classStruct,const RECOMMENDMAP &recommend);
     void setTopName();
 
@@ -24,17 +25,18 @@ private:
 
     bool eventFilter(QObject *watched, QEvent *event);
     int categoryFlag;
-
     ShareData *shareData;
 
 signals:
     void installApp(QString,int);
     void updateApp(QString,int);
+    void toDetailSig(int);
 
 protected slots:
     void sendInstallApp(QString name,int id);
     void sendUpdateApp(QString name,int id);
     void updatePackageStatus(QString name, bool bo, int flag);
+    void toDetailPage(int id);
 };
 
 #endif // RECOMMENDWIDGET_H

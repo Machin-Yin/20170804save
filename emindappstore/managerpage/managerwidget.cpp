@@ -3,11 +3,12 @@
 #include <QNetworkReply>
 #include <Details>
 
-
-
 ManagerWidget::ManagerWidget(QWidget *parent, QString urlstr, QString namestr, QString verstr, QString sizestr) : QWidget(parent),appName(namestr),headUrl(urlstr),appVersion(verstr)
 
-{    
+{
+    shareData = new ShareData();
+    jsonFunc = new JSONFUNC(shareData);
+
     hbLayout = new QHBoxLayout();
     hbLayout->setMargin(0);
     vbLayout = new QVBoxLayout();
@@ -15,27 +16,34 @@ ManagerWidget::ManagerWidget(QWidget *parent, QString urlstr, QString namestr, Q
 
     headButton = new QPushButton();
     headButton->setFlat(true);
+    headButton->setStyleSheet("background: transparent;");
+    headButton->setFixedSize(64,64);
     getImage(urlstr);
 
     nameButton = new QPushButton();
     nameButton->setFlat(true);
     nameButton->setMaximumWidth(120);
-    nameButton->setStyleSheet("text-align: left;");
-    nameButton->setText(namestr);
+    nameButton->setStyleSheet("color:#313131; font-weight: 500; font-size:14px; text-align: left; background: transparent;");
+//    nameButton->setText(namestr);
+    setBtnMetric(namestr , nameButton);
 
     verLabel = new QLabel();
+    verLabel->setStyleSheet("color:#969696;");
     verLabel->setText(verstr);
 
     sizeLabel = new QLabel();
+    sizeLabel->setStyleSheet("color:#969696;");
     sizeLabel->setText(sizestr);
 
     uninsButton = new QPushButton();
     uninsButton->setText(tr("Uninstall"));
     uninsButton->setFixedSize(80,32);
+    uninsButton->setStyleSheet("border: 1px solid #cccccc ; border-radius: 2px; ");
 
     managerButton = new QPushButton();
     managerButton->setText(tr("Open"));
     managerButton->setFixedSize(80,32);
+    managerButton->setStyleSheet("border: 1px solid #cccccc ; border-radius: 2px; ");
 
     hbLayout->addWidget(headButton);
     hbLayout->addSpacing(5);
@@ -70,6 +78,16 @@ QPushButton * ManagerWidget::getButton(int num)
     default:
         return NULL;
     }
+}
+
+void ManagerWidget::setVerLabel(QString ver)
+{
+    verLabel->setText(ver);
+}
+
+void ManagerWidget::setSizeLabel(QString size)
+{
+    sizeLabel->setText(size);
 }
 
 void ManagerWidget::setManagerButton(QString manastr)
@@ -118,18 +136,8 @@ void ManagerWidget::onGetDetails(const PackageKit::Details &value)
 {
     double size = (double)value.size();
     QString insSize = transPackSize(size);
-    QString sizeStr = "Size : " + insSize;
+    QString sizeStr = tr("Size : ") + insSize;
     sizeLabel->setText(sizeStr);
-}
-
-void ManagerWidget::onInstallSuccess()
-{
-    emit appInstallSuccess(appName);
-}
-
-void ManagerWidget::onInstallFailure()
-{
-    emit appInstallFailure(appName);
 }
 
 QString ManagerWidget::transPackSize(const double &size)
@@ -162,6 +170,7 @@ void ManagerWidget::removeFinished(PackageKit::Transaction::Exit status, uint ru
   }
   else
   {
+      emit pacRmvFailure(pkgId);
       qDebug() << "Package remove Failure! ~_~";
   }
 }
@@ -186,6 +195,73 @@ void ManagerWidget::replyFinished(QNetworkReply *reply)
     }
 }
 
+void ManagerWidget::installPackage(QString packageName)
+{
+    qDebug() << __FUNCTION__ << packageName;
+    PackageKit::Transaction *resolveTransaction = PackageKit::Daemon::resolve(packageName,
+//                                                   PackageKit::Transaction::FilterNone);
+                                                   PackageKit::Transaction::FilterArch);
+    connect(resolveTransaction,
+            SIGNAL(package(PackageKit::Transaction::Info,QString,QString)),
+            this,
+            SLOT(packageInstall(PackageKit::Transaction::Info,QString,QString)));
+    connect(resolveTransaction,
+            SIGNAL(finished(PackageKit::Transaction::Exit, uint)),
+            this,
+            SLOT(resolveFinished(PackageKit::Transaction::Exit, uint)));
+
+}
+
+void ManagerWidget::packageInstall(PackageKit::Transaction::Info, QString packageID, QString summary)
+{
+//    qDebug() << "packageInstall() packageID " << packageID;
+//    qDebug() << "packageInstall() summary " << summary;
+    PackageKit::Transaction *installTransaction = PackageKit::Daemon::installPackage(packageID);
+    connect(installTransaction,
+            SIGNAL(finished(PackageKit::Transaction::Exit, uint)),
+            this,
+            SLOT(packageInstallFinished(PackageKit::Transaction::Exit, uint)));
+}
+
+void ManagerWidget::resolveFinished(PackageKit::Transaction::Exit status, uint runtime)
+{
+//    qDebug() << "testResolveFinished() status: " << status << endl;
+//    qDebug() << "testResolveFinished() on of seconds: " << runtime << endl;
+    if (status == PackageKit::Transaction::Exit::ExitSuccess)
+    {
+        qDebug() << "Package Resolve Success!";
+    }
+    else
+    {
+        emit installFailure(appName);
+        qDebug() << "Package Resolve Failure!";
+    }
+}
+
+void ManagerWidget::packageInstallFinished(PackageKit::Transaction::Exit status, uint runtime)
+{
+    qDebug() << "packageInstallFinished() status: " << status << endl;
+//    qDebug() << "packageInstallFinished() on of seconds: " << runtime << endl;
+    if (status == PackageKit::Transaction::Exit::ExitSuccess)
+    {
+        emit installSuccess(appName);
+        qDebug() << "Package Install Success!";
+    }
+    else
+    {
+        emit installFailure(appName);
+        qDebug() << "Package Install Failure!";
+    }
+}
+
+void ManagerWidget::setBtnMetric(QString btnText,QPushButton *pushButton)
+{
+    QFontMetrics metric(btnText);
+    QString nameStr = metric.elidedText(btnText,Qt::ElideRight,pushButton->width());
+    pushButton->setText(nameStr);
+    pushButton->setToolTip(btnText);
+}
+
 QLabel *ManagerWidget::getLabel()
 {
     return sizeLabel;
@@ -201,9 +277,29 @@ void ManagerWidget::setPkgId(QString packId)
     pkgId = packId;
 }
 
+QString ManagerWidget::getPkgName()
+{
+    return pkgName;
+}
+
+void ManagerWidget::setPkgName(QString packName)
+{
+    pkgName = packName;
+}
+
+void ManagerWidget::setAppName(QString appname)
+{
+    appName = appname;
+}
+
 QString ManagerWidget::getAppName()
 {
     return appName;
+}
+
+void ManagerWidget::setHeadUrl(QString iconUrl)
+{
+    headUrl = iconUrl;
 }
 
 QString ManagerWidget::getHeadUrl()
@@ -211,8 +307,45 @@ QString ManagerWidget::getHeadUrl()
     return headUrl;
 }
 
+void ManagerWidget::setVersion(QString version)
+{
+    appVersion = version;
+}
+
 QString ManagerWidget::getVersion()
 {
     return appVersion;
 }
+
+void ManagerWidget::setFlag(QString flag)
+{
+    insUpFlag = flag;
+}
+
+QString ManagerWidget::getFlag()
+{
+    return insUpFlag;
+}
+
+void ManagerWidget::setReleaseId(int relid)
+{
+    releaseId = relid;
+}
+
+int ManagerWidget::getReleaseId()
+{
+    return releaseId;
+}
+
+void ManagerWidget::setExeFile(QString exefile)
+{
+    exeFile = exefile;
+}
+
+QString ManagerWidget::getExeFile()
+{
+    return exeFile;
+}
+
+
 

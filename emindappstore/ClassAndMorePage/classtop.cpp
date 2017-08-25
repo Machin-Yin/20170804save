@@ -9,17 +9,15 @@ ClassTop::ClassTop()
     btnTop->setFlat(true);
     labelTop = new QLabel();
     spacerTop = new QSpacerItem(0,48,QSizePolicy::Expanding,QSizePolicy::Minimum);
-//    labelTop->setStyleSheet("border-left-width: 3px;border-style: solid;border-left-color: rgb(65,105,225);");
-    labelTop->setMaximumHeight(16);
+    labelTop->setObjectName("labelTop");
     labelTop->setContentsMargins(8,0,0,0);
+    labelTop->setMaximumHeight(16);
 
     setBtnData();
-//    setLabelData();
-
-
     lineTop = new QLabel();
-    lineTop->setStyleSheet("border-top-width: 1px;border-style: solid;border-top-color: rgb(220, 220, 220);");
-    lineTop->setMaximumHeight(32);
+    lineTop->setObjectName("lineTop");
+    lineTop->setStyleSheet("border-bottom: 1px;border-style: solid;border-bottom-color: rgb(220, 220, 220);");
+    lineTop->setMaximumHeight(16);
 
     //美化布局
     hbTopLayout = new QHBoxLayout();
@@ -32,14 +30,12 @@ ClassTop::ClassTop()
     vbTopLayout->setMargin(0);
     vbTopLayout->addLayout(hbTopLayout);
     vbTopLayout->addWidget(lineTop);
-    vbTopLayout->setContentsMargins(16,0,4,0);
+    vbTopLayout->setContentsMargins(0,0,0,0);
 
     widget->setLayout(vbTopLayout);
     widget->setMaximumHeight(48);
     btnTop->setFocusPolicy(Qt::NoFocus);
-    btnTop->setMaximumWidth(48);
-    btnTop->setObjectName("btnTop");
-//    btnTop->setStyleSheet("text-align: right;");//设置按钮文字显示位置
+    btnTop->setMinimumWidth(48);
     btnTop->setCursor(Qt::PointingHandCursor);
     connect(btnTop,SIGNAL(clicked(bool)),this,SLOT(sendSlotBtn()));
 }
@@ -51,7 +47,20 @@ ClassTop::~ClassTop()
 
 void ClassTop::setBtnData()
 {
-    btnTop->setText("更多>");
+    QHBoxLayout *layout = new QHBoxLayout();
+    QLabel *labelTxt = new QLabel();
+    labelTxt->setObjectName("labelTxt");
+
+    labelTxt->setText(tr("more"));
+    QLabel *labelImage = new QLabel();
+    QPixmap image;
+    image.load(":/image/more.png");
+    labelImage->setPixmap(image);
+    layout->addWidget(labelTxt);
+    layout->addWidget(labelImage);
+    layout->setMargin(0);
+    layout->setSpacing(0);
+    btnTop->setLayout(layout);
 }
 
 void ClassTop::setLabelData(QString data)

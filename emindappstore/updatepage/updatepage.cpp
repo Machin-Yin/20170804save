@@ -1,14 +1,16 @@
 #include <QHeaderView>
 #include <QDebug>
+#include <QSettings>
 #include <QLoggingCategory>
 #include "updatepage.h"
 
-UpdatePage::UpdatePage(QWidget *parent, JSONFUNC *json) : QWidget(parent)
+UpdatePage::UpdatePage(QWidget *parent, JSONFUNC *json,ShareData *sharedata) : QWidget(parent)
 {
-    upd = new PkUpdates(this,json);
+    upd = new PkUpdates(this,json,sharedata);
     jsonFunc = json;
     connect(json,SIGNAL(productIsOk()),this,SLOT(getPackageUpdate()));
     connect(upd,SIGNAL(updateStatusChanged()),this,SLOT(onStatusChanged()));
+    connect(this,SIGNAL(appUpdateOk(QString, QString, QString, QString, QString)),this,SLOT(sendUpdateSuccess(QString)));
     createUpdateWindow();
 }
 
@@ -28,7 +30,7 @@ void UpdatePage::createUpdateWindow()
     updateTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     updateTable->setFocusPolicy(Qt::NoFocus);
 
-    updTaskBar = new TaskBar(this,"0个应用可升级","全部更新");
+    updTaskBar = new TaskBar(this,tr("0 Application Can Be Updated"),tr("All Update"));
     connect(upd,SIGNAL(sigUpdateData(UPDATESTRUCTMAP)),this,SLOT(onGetupFinished(UPDATESTRUCTMAP)));
     connect(updTaskBar->getOnekeyBtn(),SIGNAL(clicked()),this,SLOT(oneKeyBtnclicked()));
 
@@ -39,6 +41,7 @@ void UpdatePage::createUpdateWindow()
     this->setLayout(upVLayout);
 
     pageUpdateWidget->setLayout(upVLayout);
+    pageUpdateWidget->setObjectName("pageUpdateWidget");
     upScroArea->setWidget(pageUpdateWidget);
     upScroArea->setWidgetResizable(true);
 
@@ -70,6 +73,8 @@ void UpdatePage::onGetupFinished(UPDATESTRUCTMAP updateMap)
     updateTable->verticalHeader()->setDefaultSectionSize(96);
     updateTable->horizontalHeader()->setStretchLastSection(true);
     updateTable->setFrameStyle(QFrame::NoFrame);
+    updateTable->setSelectionMode(QAbstractItemView::NoSelection);
+    updateTable->setFocusPolicy(Qt::NoFocus);
 
     updateTable->setMinimumHeight(96*rowCount);
 
@@ -84,18 +89,22 @@ void UpdatePage::onGetupFinished(UPDATESTRUCTMAP updateMap)
     {
         QString headUrl = itor.value().proImage;
         QString appName = itor.value().proName;
+        QString packName = itor.value().packageName;
         QString changeLog = itor.value().changeLog;
         int psize = itor.value().packageSize;
         QString packSize = transPackSize(psize);
-        QString packVersion = itor.value().version;
+        QString packVersion = "V" + itor.value().version;
+        QString exefile = itor.value().exeFile;
+        int productId = itor.value().productId;
+        int relid = itor.key();
 
         QVariantMap updateList = upd->packages();
         QString pkgId;
         QVariantMap::iterator iter;
-        for(iter = updateList.begin(); iter != updateList.end(); iter++)
+        for(iter = updateList.begin(); iter != updateList.end(); iter++)     //get pkgId
         {
             QString packageName = PackageKit::Transaction::packageName(iter.key());
-            if(appName == packageName)
+            if(packName == packageName)
             {
                 pkgId = iter.key();
                 break;
@@ -103,7 +112,35 @@ void UpdatePage::onGetupFinished(UPDATESTRUCTMAP updateMap)
         }
 
         AppWidget* appWidget = new AppWidget(this,headUrl,appName,packSize,packVersion,changeLog,pkgId);
+        appWidget->setExeFile(exefile);
+        appWidget->setReleaseId(relid);
+        appWidget->setPkgName(packName);
         updateTable->setCellWidget(count,0,appWidget);
+
+        QSettings settings( "upins.ini", QSettings::IniFormat );
+        QStringList keys = settings.childGroups();
+        QString section;
+        QString pkgName;
+        QString flag;
+        int saveCount = keys.count();
+        for(int i = 0; i < saveCount; i++)
+        {
+            section = keys.at(i);
+            settings.beginGroup(section);
+            pkgName = settings.value("PkgName").toString();
+            flag = settings.value("Flag").toString();
+            settings.endGroup();
+            if(packName == pkgName)
+            {
+                if(flag == "UPDATEFLAG")
+                {
+
+                    appWidget->getUpdateButton()->setText(tr("ReUpdate"));
+                }
+                break;
+            }
+        }
+
         count++;
 
         connect(appWidget->getHeadButton(),SIGNAL(clicked()),this,SLOT(pageUpdateBtnClicked()));
@@ -137,7 +174,8 @@ void UpdatePage::pageUpdateBtnClicked()
             int tableHeight = updateTable->height();
 
             updateTable->insertRow(i+1);
-            QString funcStr = appWidget->getChangeLog().split("#").at(1);
+            QString funcStr = appWidget->getNewFunStr();
+            qDebug() << "funcStr == " << funcStr;
             FuncWidget *nfuncWidget = new FuncWidget(this,funcStr);
             updateTable->setCellWidget(i+1,0,nfuncWidget);
             int textHeight  = nfuncWidget->getNfuncEdit()->document()->size().height();
@@ -157,17 +195,22 @@ void UpdatePage::pageUpdateBtnClicked()
 
             QString iconUrl = appWidget->getHeadUrl();
             QString appName = appWidget->getAppName();
-            QString appVersion = tr("Version：") + appWidget->getAppVer();
-            QString appSize = tr("Size：") + appWidget->getAppSize();
-            emit theUpdateApp(iconUrl, appName, appVersion, appSize);
+            QString appVersion = tr("Version : ") + appWidget->getAppVer();
+            QString appSize = tr("Size : ") + appWidget->getAppSize();
+            int releasId = appWidget->getReleaseId();
+            QString exeFile = appWidget->getExeFile();
+            QString pkgName = appWidget->getPkgName();
+            emit updatePackage(appName,true,8);
+            emit theUpdateApp(iconUrl, appName, appVersion, appSize, releasId, exeFile, pkgName);
 
             QString pkgId = appWidget->getPkgId();
             appWidget->getUpdateButton()->setText("Updating...");
-            connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-            connect(upd,SIGNAL(updateFailure()),appWidget,SLOT(onUpdateFailure()));
-            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
-            connect(appWidget,SIGNAL(appUpdateFailure()),this,SLOT(onAppUpdateFailure()));
-            upd->installUpdate(pkgId);
+            connect(appWidget,SIGNAL(updateOk()),this,SLOT(onAppUpdateFinished()));
+            connect(appWidget,SIGNAL(updateFailure()),this,SLOT(onAppUpdateFailure()));
+//            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
+//            connect(appWidget,SIGNAL(appUpdateFailure()),this,SLOT(onAppUpdateFailure()));
+
+            appWidget->installUpdate(pkgId);
             break;
         }
         else
@@ -197,15 +240,20 @@ void UpdatePage::oneKeyBtnclicked()
 
         QString iconUrl = appWidget->getHeadUrl();
         QString appName = appWidget->getAppName();
-        QString appVersion = tr("Version：") + appWidget->getAppVer();
-        QString appSize = tr("Size：") + appWidget->getAppSize();
-        emit theUpdateApp(iconUrl, appName, appVersion, appSize);
+        QString appVersion = tr("Version : ") + appWidget->getAppVer();
+        QString appSize = tr("Size : ") + appWidget->getAppSize();
+        int releasId = appWidget->getReleaseId();
+        QString exeFile = appWidget->getExeFile();
+        QString pkgName = appWidget->getPkgName();
+        emit updatePackage(appName,true,UPDATING);
+        emit theUpdateApp(iconUrl, appName, appVersion, appSize, releasId, exeFile, pkgName);
 
         QString pkgId = appWidget->getPkgId();
         appWidget->getUpdateButton()->setText("Updating...");
-//        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
+        connect(appWidget,SIGNAL(updateOk()),this,SLOT(onAppUpdateFinished()));
+        connect(appWidget,SIGNAL(updateFailure()),this,SLOT(onAppUpdateFailure()));
 //        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
-        upd->installUpdate(pkgId);
+        appWidget->installUpdate(pkgId);
 
         if(!appWidget->getFuncButton()->isEnabled())
             i++;
@@ -220,8 +268,8 @@ void UpdatePage::onAppUpdateFinished()
         AppWidget* appWidget = (AppWidget*)updateTable->cellWidget(i,0);
         if(sender() == appWidget)
         {
-            qDebug() << "remove row :" << i;
-            emit appUpdateOk(appWidget->getAppName() ,appWidget->getHeadUrl(), appWidget->getAppVer());
+            emit updatePackageSuccess(appWidget->getAppName(),true,UPDATE);
+            emit appUpdateOk(appWidget->getAppName() ,appWidget->getHeadUrl(), appWidget->getAppVer(), appWidget->getExeFile(), appWidget->getPkgName());
             if(!appWidget->getFuncButton()->isEnabled())
                 updateTable->removeRow(i+1);
             updateTable->removeRow(i);
@@ -240,8 +288,10 @@ void UpdatePage::onAppUpdateFailure()
         AppWidget* appWidget = (AppWidget*)updateTable->cellWidget(i,0);
         if(sender() == appWidget)
         {
-            emit appUpdateFailure(appWidget->getAppName());
-            appWidget->getUpdateButton()->setText(tr("Update Failed"));
+            QString appName = appWidget->getAppName();
+            emit updatePackageSuccess(appName,false,UPDATE);
+            emit appUpdateFailure(appName);
+            appWidget->getUpdateButton()->setText(tr("ReUpdate"));
         }
     }
 }
@@ -251,8 +301,9 @@ void UpdatePage::getPackageUpdate()
     upd->getUpdateData();
 }
 
-void UpdatePage::onInsdBtnClicked(QString appName)
+void UpdatePage::onUpBtnClicked(QString appName)
 {
+    qDebug() << __FUNCTION__;
     int updCount = updateTable->rowCount();
     for(int i = 0; i < updCount; i++)
     {
@@ -261,25 +312,24 @@ void UpdatePage::onInsdBtnClicked(QString appName)
         {
             QString iconUrl = appWidget->getHeadUrl();
             QString appName = appWidget->getAppName();
-            QString appVersion = tr("Version：") + appWidget->getAppVer();
-            QString appSize = tr("Size：") + appWidget->getAppSize();
-            emit theUpdateApp(iconUrl, appName, appVersion, appSize);
+            QString appVersion = tr("Version :") + appWidget->getAppVer();
+            QString appSize = tr("Size : ") + appWidget->getAppSize();
+            int releasId = appWidget->getReleaseId();
+            QString exeFile = appWidget->getExeFile();
+            QString pkgName = appWidget->getPkgName();
+            emit updatePackage(appName,true,8);
+            emit theUpdateApp(iconUrl, appName, appVersion, appSize, releasId, exeFile, pkgName);
+
             appWidget->getUpdateButton()->setText("Updating...");
             QString pkgId = appWidget->getPkgId();
-            connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-            connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
-            upd->installUpdate(pkgId);
+            connect(appWidget,SIGNAL(updateOk()),this,SLOT(onAppUpdateFinished()));
+            connect(appWidget,SIGNAL(updateFailure()),this,SLOT(onAppUpdateFailure()));
 
+            appWidget->installUpdate(pkgId);
         }
-
-//        QString pkgId = appWidget->getPkgId();
-//        connect(upd,SIGNAL(updateOk()),appWidget,SLOT(onUpdateOk()));
-//        connect(appWidget,SIGNAL(appUpdateFinished()),this,SLOT(onAppUpdateFinished()));
-//        upd->installUpdate(pkgId);
 
         if(!appWidget->getFuncButton()->isEnabled())
             i++;
-
     }
 }
 
@@ -345,6 +395,16 @@ QString UpdatePage::transPackSize(const double &size)
 void UpdatePage::onStatusChanged()
 {
     emit updateStatusChanged();
+}
+
+void UpdatePage::sendUpdateSuccess(QString appName)
+{
+    emit sigUpdateSuccess(appName,true,UPDATE);
+}
+
+void UpdatePage::sendUpdateFailure(QString appName)
+{
+    emit sigUpdateSuccess(appName,false,UPDATE);
 }
 
 bool UpdatePage::event(QEvent *event)

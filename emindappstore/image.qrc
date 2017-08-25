@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/forward_black.png</file>
+        <file>image/forward_gray.png</file>
+        <file>image/hide.png</file>
+        <file>image/more.png</file>
+        <file>image/refresh_black.png</file>
+        <file>image/refresh_gray.png</file>
+        <file>image/return_black.png</file>
+        <file>image/return_gray.png</file>
+        <file>image/search.png</file>
+        <file>image/star_0.png</file>
+        <file>image/star_50.png</file>
+        <file>image/star_100.png</file>
+        <file>image/test1.jpg</file>
+        <file>image/test2.jpg</file>
+        <file>image/test3.jpg</file>
+        <file>image/test4.jpg</file>
+        <file>image/Tux.png</file>
+    </qresource>
+</RCC>

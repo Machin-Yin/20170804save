@@ -1,37 +1,53 @@
-#ifndef SEARCHWIDGET_H
-#define SEARCHWIDGET_H
+#ifndef SearchWidgetH
+#define SearchWidgetH
 
-#include <QObject>
 #include <QWidget>
-#include <qglobal.h>
-class QLabel;
-class QFrame;
-class QVBoxLayout;
-class QSpacerItem;
-class QTableView;
+#include "ClassAndMorePage/classwidget.h"
+#include "ClassAndMorePage/classtop.h"
+#include "jsonfunc.h"
+#include "sharedata.h"
+#include <QVBoxLayout>
+class QSPacerItem;
 
 class SearchWidget : public QWidget
 {
     Q_OBJECT
+
 public:
-    explicit SearchWidget(QWidget *parent = 0);
-
-signals:
-
-public slots:
-    void doSearch(QString key);
-    void refreshPg(int);
-
+    SearchWidget(QWidget *parent,ShareData* shareData,JSONFUNC *jsonFunc);
+    ~SearchWidget();
+    QWidget *moreWidget;
+    void setElement(int category,const CLASSSTRUCTMAP &classStruct);
+    void setElement(QString keyText1,const CLASSSTRUCTMAP &classStruct);
+    void setTopName(QString keyText);
+    void setElementNum(const ELEMENTNUMBERMAP &elementNum);
 
 private:
-    QFrame *line;
-    QLabel *lbInfo;
-    QLabel *lbNoResult;
+    ClassTop *moreClassTop;
+    QVBoxLayout *mainLayout;
+    Element *moreElement;
+    QGridLayout *eleLayout;
+    QWidget  **spaceWidget;
+
+    bool eventFilter(QObject *watched, QEvent *event);
+    int categoryFlag;
+    int elementNumber;
+    ShareData *sdata;
+    JSONFUNC *jdata;
     QVBoxLayout *vly;
-    QSpacerItem *space;
-    QTableView *tbvResult;
+    QSpacerItem *spItem;
 
+signals:
+    void installApp(QString,int);
+    void updateApp(QString,int);
 
+protected slots:
+    void sendInstallApp(QString name,int id);
+    void sendUpdateApp(QString name,int id);
+    void updatePackageStatus(QString name, bool bo, int flag);
+
+    void doSearch(QString keyText);
+    void refreshPage(int);
 };
 
-#endif // SEARCHWIDGET_H
+#endif // SearchWidgetH

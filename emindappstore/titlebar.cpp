@@ -18,6 +18,8 @@ TitleBar::TitleBar(QWidget *parent) : QWidget(parent)
     btnBack->setObjectName("backBtn");
     btnNext->setObjectName("nextBtn");
     btnRefresh->setObjectName("refreshBtn");
+    btnBack->setDisabled(true);
+    btnNext->setDisabled(true);
 
     btnHome = new QPushButton(this);
     btnHome->setText(tr("Home"));
@@ -134,8 +136,6 @@ TitleBar::TitleBar(QWidget *parent) : QWidget(parent)
     vly->setContentsMargins(10,5,8,0);
 
     setLayout(vly);
-
-
 }
 
 

@@ -13,10 +13,14 @@ TaskBar::TaskBar(QWidget *parent,QString taskstr,QString onekeystr):QWidget(pare
 
     taskLabel = new QLabel();
     taskLabel->setText(taskStr);
-    taskLabel->setStyleSheet("font:balck; font-size:16px;");
+    taskLabel->setStyleSheet("font:black; font-size:16px;");
 
     onekeyButton = new QPushButton();
     onekeyButton->setFixedSize(80,32);
+    QPalette uppal;
+    uppal.setColor(QPalette::ButtonText, QColor(255,255,255));
+    onekeyButton->setPalette(uppal);
+    onekeyButton->setStyleSheet("border: 0px ; background: #027aff  ; border-radius: 2px; ");
     onekeyButton->setText(onekeyStr);
 
     hbLayout->addWidget(vblueLabel);
@@ -31,7 +35,7 @@ TaskBar::TaskBar(QWidget *parent,QString taskstr,QString onekeystr):QWidget(pare
 void TaskBar::setTaskLabel(int count)
 {
     QString countStr = QString::number(count, 10);
-    QString taskStr = countStr + tr("个应用可升级");
+    QString taskStr = countStr + tr(" Applications Can Be Updated");
     taskLabel->setText(taskStr);
 }
 

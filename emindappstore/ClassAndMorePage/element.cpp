@@ -2,47 +2,54 @@
 #include "qreplytimeout.h"
 #include <QFont>
 #include <QDebug>
+#include "sharedata.h"
 
 Element::Element()
 {
-    baseWidget = new QWidget();
+    baseWidget = new QWidget(this);
     baseWidget->setFixedSize(144,74);
 
     vbLayout = new QVBoxLayout();
     hbLayout = new QHBoxLayout();
 
-    btnImage = new QPushButton();
+    btnImage = new QPushButton(this);
     btnImage->setFixedSize(64,64);
-    btnName = new QPushButton();
+    btnName = new QPushButton(this);
     btnName->setFixedSize(72,22);
     btnName->setStyleSheet("text-align: left;");//设置按钮文字显示位置-左对齐
     btnImage->setFlat(true);
     btnName->setFlat(true);
     vbLayout->addWidget(btnName);
     vbLayout->setMargin(0);
-    vbLayout->setSpacing(0);
 
     hbLayout->addWidget(btnImage);
-    btnStatus = new QPushButton();
+    btnStatus = new QPushButton(this);
     btnStatus->setFixedSize(72,24);
     //        btnStatus->setFlat(true);
 
     hbStartLayout = new QHBoxLayout();
     hbStartLayout->setContentsMargins(0,0,0,0);
+    hbStartLayout->setSpacing(0);
 
     labelStar = new QLabel[5];
     for(int i=0;i<5;i++)
     {
         hbStartLayout->addWidget(&labelStar[i]);
     }
+    hbStartLayout->addSpacing(24);
 
     vbLayout->addLayout(hbStartLayout);
+    vbLayout->addSpacing(5);
     vbLayout->addWidget(btnStatus);
     connect(btnStatus,SIGNAL(clicked(bool)),this,SLOT(btnStatusSlot()));
+    connect(btnImage,SIGNAL(clicked(bool)),this,SLOT(btnImageSlot()));
+    connect(btnName,SIGNAL(clicked(bool)),this,SLOT(btnNameSlot()));
 
     //去除矩形虚线框
     btnName->setFocusPolicy(Qt::NoFocus);
+    btnName->setObjectName("btnName");
     btnImage->setFocusPolicy(Qt::NoFocus);
+    btnImage->setObjectName("btnImage");
     btnStatus->setFocusPolicy(Qt::NoFocus);
     btnStatus->setCursor(Qt::PointingHandCursor);
     btnStatus->setObjectName("btnStatus");
@@ -50,7 +57,6 @@ Element::Element()
     btnImage->setCursor(Qt::PointingHandCursor);
     hbLayout->addLayout(vbLayout);
     hbLayout->setMargin(0);
-    hbLayout->setSpacing(0);
     baseWidget->setLayout(hbLayout);
 
     m_ImageManager = new QNetworkAccessManager();
@@ -64,7 +70,11 @@ Element::Element()
 
 Element::~Element()
 {
-
+    delete[] labelStar;
+    delete hbStartLayout;
+    delete vbLayout;
+    delete hbLayout;
+    delete baseWidget;
 }
 
 void Element::setBtnImage(QString imagePath)
@@ -86,83 +96,114 @@ void Element::setProStatus(int status)
 {
     QString text;
     proStatus = status;
-    if(status == 1)
+    if(status == DOWNLOAD)
     {
-        text = "DownLoad";
+        text = tr("DownLoad");
     }
-    else if(status == 2)
+    else if(status == UPDATE)
     {
-        text = "Update";
+        text = tr("Update");
     }
-    else if(status == 3)
+    else if(status == OPEN)
     {
-        text = "open";
+        text = tr("Open");
     }
-    else if(status == 4)
+    else if(status == REDOWNLOAD)
     {
-        text = "reDownLoad";
+        text = tr("ReDownLoad");
     }
-    else if(status == 5)
+    else if(status == REUPDATE)
     {
-        text = "reUpdate";
+        text = tr("ReUpdate");
+    }
+    else if(status == UNINSTALLING)
+    {
+        text = tr("UnInstalling...");
+    }
+    else if(status == DOWNLOADING)
+    {
+        text = tr("DownLoading...");
+    }
+    else if(status == UPDATING)
+    {
+        text = tr("UpDating...");
     }
     else
     {
         qDebug("product status is error");
-        text = "DownLoad";
+        text = tr("DownLoad");
     }
     btnStatus->setText(text);
 }
 void Element::updateProStatus(bool status, int flag)
 {
     QString text;
-    if(flag == 1 || flag == 2)
+    if(flag == DOWNLOAD || flag == UPDATE)
     {
         if(status)
         {
-            if(proStatus == 1)
-            {
-                text = "Open";
-                proStatus = 3;
-            }
-            else if(proStatus == 2)
-            {
-                text = "Open";
-                proStatus = 3;
-            }
-            else if(proStatus == 4)
-            {
-                text = "Open";
-                proStatus = 3;
-            }
-            else if(proStatus == 5)
-            {
-                text = "Open";
-                proStatus = 3;
-            }
-            else
-            {
-                text = "DownLoad";
-            }
+            text = tr("Open");
+            proStatus = OPEN;
         }
         else
         {
-            if(proStatus == 1 || proStatus == 4)
+            if(proStatus == DOWNLOAD || proStatus == REDOWNLOAD || proStatus == DOWNLOADING)
             {
-                text = "reDownLoad";
-                proStatus = 4;
+                text = tr("ReDownLoad");
+                proStatus = REDOWNLOAD;
             }
-            else if(proStatus == 2 || proStatus == 5)
+            else if(proStatus == UPDATE || proStatus == REUPDATE || proStatus == UPDATING)
             {
-                text = "reUpdate";
-                proStatus = 5;
+                text = tr("ReUpdate");
+                proStatus = REUPDATE;
             }
         }
     }
-    else if(flag == 3)
+    else if(flag == DOWNLOAD)
     {
-        text = "DownLoad";
-        proStatus = 1;
+        if(status)
+        {
+            text = tr("DownLoad");
+            proStatus = DOWNLOAD;
+        }
+        else
+        {
+            text = tr("Open");
+            proStatus = OPEN;
+        }
+    }
+    else if(flag == REDOWNLOAD)
+    {
+        text = tr("ReDownLoad");
+        proStatus = REDOWNLOAD;
+    }
+    else if(flag == REUPDATE)
+    {
+        text = tr("reUpdate");
+        proStatus = REUPDATE;
+    }
+    else if(flag == UNINSTALL)
+    {
+        if(status)
+        {
+            text = tr("DownLoad");
+            proStatus =DOWNLOAD;
+        }
+        else
+        {
+            text = tr("UnInstall");
+            proStatus =UNINSTALL;
+        }
+    }
+    else if(flag == UNINSTALLING)
+    {
+        text = tr("UnInstalling...");
+        proStatus =UNINSTALLING;
+    }
+    else if(flag == UPDATING)
+    {
+        text = tr("UpDating...");
+        proStatus =UPDATING;
     }
     btnStatus->setText(text);
     btnStatus->setEnabled(true);
@@ -177,19 +218,19 @@ void Element::setReleaseId(int id)
 void Element::btnStatusSlot()
 {
     qDebug()<<__FUNCTION__<<" proStatus = "<<proStatus<<endl;
-    if(proStatus == 1 || proStatus == 4)
+    if(proStatus == DOWNLOAD || proStatus == REDOWNLOAD)
     {
-        btnStatus->setText("正在下载");
+        btnStatus->setText(tr("DownLoading..."));
         btnStatus->setEnabled(false);
         emit installPackage(btnName->toolTip(),releaseId);
     }
-    else if(proStatus == 2 || proStatus == 5)
+    else if(proStatus == UPDATE || proStatus == REUPDATE)
     {
-        btnStatus->setText("正在更新");
+        btnStatus->setText(tr("UpDating..."));
         btnStatus->setEnabled(false);
         emit updatePackage(btnName->toolTip(),releaseId);
     }
-    else if(proStatus == 3)
+    else if(proStatus == OPEN)
     {
         process.start(exebleFile);
     }
@@ -197,6 +238,16 @@ void Element::btnStatusSlot()
     {
         qDebug("product status is error!");
     }
+}
+
+void Element::btnNameSlot()
+{
+    emit detailspageSig(productId);
+}
+
+void Element::btnImageSlot()
+{
+    emit detailspageSig(productId);
 }
 
 void Element::setcategory(int cate)
@@ -235,18 +286,18 @@ void Element::initStar(double num)
 { 
     for(int i = 0;i < 5;i++)
     {
-        labelStar[i].setFixedSize(10,10);
-        labelStar[i].setPixmap(QPixmap(""));
+        labelStar[i].setFixedSize(8,8);
+        labelStar[i].setPixmap(QPixmap(":/image/star_0.png"));
     }
 
     for(int i = 0;i < (int)num;i++)
     {
-        labelStar[i].setPixmap(QPixmap(":/image/refresh.png"));
+        labelStar[i].setPixmap(QPixmap(":/image/star_100.png"));
     }
 
     if(num - (int)num > 0)
     {
-        labelStar[(int)num].setPixmap(QPixmap(":/image/gift.png"));
+        labelStar[(int)num].setPixmap(QPixmap(":/image/star_50.png"));
     }
 }
 

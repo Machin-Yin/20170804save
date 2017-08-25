@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 QT       += quickwidgets
 QT       += quick qml
 #QT       += 3dcore 3drender 3dinput 3dlogic 3dquick
@@ -38,7 +38,8 @@ SOURCES += main.cpp \
     managerpage/managerwidget.cpp \
     updatepage/pkupdates.cpp \
     updatepage/updatepage.cpp \
-    jsonfunc.cpp
+    jsonfunc.cpp \
+    guifactory.cpp
 
 HEADERS  += \
     softwarecenterwindow.h \
@@ -65,20 +66,22 @@ HEADERS  += \
     updatepage/updatepage.h \
     jsonfunc.h \
     qreplytimeout.h \
-    sharedata.h
+    sharedata.h \
+    guifactory.h
 
 
 
 RESOURCES += \
-    images.qrc \
     style.qrc \
-    qml.qrc
+    qml.qrc \
+    image.qrc
 
 DISTFILES += \
     style.qss \
     updatepage/image/head.png \
     updatepage/image/hide.png \
-    README.md
+    README.md \
+    app_zh.qm
 
 
 INCLUDEPATH += /usr/include/packagekitqt5/PackageKit
@@ -86,3 +89,5 @@ INCLUDEPATH += /usr/include/packagekitqt5/PackageKit
 LIBS += /usr/lib/x86_64-linux-gnu/libpackagekitqt5.so
 
 CONFIG   += c++11
+
+TRANSLATIONS+=app_zh.ts
